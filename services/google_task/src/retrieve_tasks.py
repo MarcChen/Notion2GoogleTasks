@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -9,18 +10,18 @@ class GoogleTasksManager:
     A manager class for Google Tasks API to handle task lists, tasks, and subtasks.
     """
 
-    def __init__(self, token_path):
+    def __init__(self, token_path: str):
         """
         Initializes the GoogleTasksManager with the provided token path.
 
         Args:
             token_path (str): Path to the token file.
         """
-        self.token_path = token_path
-        self.credentials = self._get_credentials()
+        self.token_path: str = token_path
+        self.credentials: Credentials = self._get_credentials()
         self.service = build('tasks', 'v1', credentials=self.credentials)
 
-    def _get_credentials(self):
+    def _get_credentials(self) -> Credentials:
         """
         Loads and refreshes credentials.
 
@@ -30,7 +31,7 @@ class GoogleTasksManager:
         credentials = load_credentials(self.token_path)
         return refresh_access_token(credentials, self.token_path)
 
-    def list_task_lists(self):
+    def list_task_lists(self) -> Dict[str, str]:
         """
         Lists all task lists.
 
@@ -44,7 +45,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error listing task lists: {e}")
 
-    def create_task_list(self, task_list_name):
+    def create_task_list(self, task_list_name: str) -> Dict[str, str]:
         """
         Creates a new task list.
 
@@ -61,7 +62,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error creating task list: {e}")
 
-    def list_tasks_in_tasklist(self, tasklist_id, include_completed=True):
+    def list_tasks_in_tasklist(self, tasklist_id: str, include_completed: bool = True) -> Dict[str, Dict[str, Any]]:
         """
         Lists all tasks in a specified task list.
 
@@ -89,15 +90,21 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error listing tasks in task list: {e}")
 
-    def create_task(self, tasklist_id, task_title, task_notes=None, due_date=None):
+    def create_task(
+        self,
+        tasklist_id: str,
+        task_title: str,
+        task_notes: Optional[str] = None,
+        due_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Creates a new task in a specified task list.
 
         Args:
             tasklist_id (str): ID of the task list.
             task_title (str): Title of the new task.
-            task_notes (str): Notes for the task (optional).
-            due_date (str): Due date in RFC 3339 format (optional).
+            task_notes (Optional[str]): Notes for the task (optional).
+            due_date (Optional[str]): Due date in RFC 3339 format (optional).
 
         Returns:
             dict: Details of the created task.
@@ -108,7 +115,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error creating task: {e}")
 
-    def get_task_details(self, tasklist_id, task_id):
+    def get_task_details(self, tasklist_id: str, task_id: str) -> Dict[str, Any]:
         """
         Fetches details of a specific task.
 
@@ -132,7 +139,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error fetching task details: {e}")
 
-    def delete_task(self, tasklist_id, task_id):
+    def delete_task(self, tasklist_id: str, task_id: str) -> bool:
         """
         Deletes a specific task.
 
@@ -149,7 +156,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error deleting task: {e}")
 
-    def mark_task_completed(self, tasklist_id, task_id):
+    def mark_task_completed(self, tasklist_id: str, task_id: str) -> Dict[str, Any]:
         """
         Marks a specific task as completed.
 
@@ -167,7 +174,14 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error marking task as completed: {e}")
 
-    def create_subtask(self, tasklist_id, parent_task_id, subtask_title, subtask_notes=None, due_date=None):
+    def create_subtask(
+        self,
+        tasklist_id: str,
+        parent_task_id: str,
+        subtask_title: str,
+        subtask_notes: Optional[str] = None,
+        due_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Creates a subtask under a specified parent task.
 
@@ -175,8 +189,8 @@ class GoogleTasksManager:
             tasklist_id (str): ID of the task list.
             parent_task_id (str): ID of the parent task.
             subtask_title (str): Title of the subtask.
-            subtask_notes (str): Notes for the subtask (optional).
-            due_date (str): Due date in RFC 3339 format (optional).
+            subtask_notes (Optional[str]): Notes for the subtask (optional).
+            due_date (Optional[str]): Due date in RFC 3339 format (optional).
 
         Returns:
             dict: Details of the created subtask.
