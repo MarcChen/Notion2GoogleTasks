@@ -1,9 +1,6 @@
 import os
 import json
 
-# Token response from your received data from OAuth Playground
-# https://stackoverflow.com/questions/19766912/how-do-i-authorise-an-app-web-or-installed-without-user-intervention/19766913#19766913
-# https://developers.google.com/oauthplayground/?code=4/0AdLIrYcBVbTAaNgid9cyz0YUmwc9e1zgZq2RMnT_-mFFTH3Or0E2C96bVB3nmojb7dOrMg&scope=https://www.googleapis.com/auth/calendar%20https://mail.google.com/%20https://www.googleapis.com/auth/drive
 token_response = {
   "access_token": os.getenv("GOOGLE_ACCESS_TOKEN"), 
   "scope": "https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/tasks.readonly", 
