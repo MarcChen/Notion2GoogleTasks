@@ -4,6 +4,8 @@ import os
 from typing import Optional, Dict, List
 from rich import print
 from rich.progress import Progress
+from rich.console import Console
+from rich.live import Live
 from services.notion.src.notion_client import NotionClient
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
 
@@ -15,7 +17,7 @@ class NotionToGoogleTaskSyncer:
 
     def sync_pages_to_google_tasks(self):
         """
-        Synchronizes Notion pages to Google Tasks.
+        Synchronizes Notion pages to Google Tasks with a progress bar that remains at the top.
         """
         notion_pages = self.notion_client.get_filtered_sorted_database()
         if not notion_pages:
@@ -25,53 +27,63 @@ class NotionToGoogleTaskSyncer:
         parsed_pages = self.notion_client.parse_notion_response(notion_pages)
         google_task_lists = self.google_tasks_manager.list_task_lists()
 
-        print(f"Google Task Lists: {google_task_lists}")
+        console = Console()
+        progress = Progress()
 
-        for page in parsed_pages:
-            page_id = page['unique_id']
-            page_title = page['title']
-            tag = page['tags'] or "NoTag" 
-            due_date = self.compute_due_date(page['due_date'])           
-            importance = page['importance']
-            text = page['text']
-            urls = page['url']
-            parent_page_name = page['parent_page_name'] or None 
+        task = progress.add_task("[cyan]Processing Pages...", total=len(parsed_pages))
 
-            print(f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]")
+        # Use Rich Live for the progress bar
+        with Live(progress, console=console, refresh_per_second=10):
+            for page in parsed_pages:
+                page_id = page['unique_id']
+                page_title = page['title']
+                tag = page['tags'] or "NoTag"
+                due_date = self.compute_due_date(page['due_date'])
+                importance = page['importance']
+                text = page['text']
+                urls = page['url']
+                parent_page_name = page['parent_page_name'] or None
 
-            # Check if the task already exists
-            if self.task_exists(google_task_lists, page_id):
-                print(f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]")
-                continue
+                console.print(f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]")
 
-            # Ensure task list exists for the tag
-            try:
-                tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
-                print(f"  Task List ID for tag '{tag}': {tasklist_id}")
-            except Exception as e:
-                print(f"[red]Error ensuring task list for tag '{tag}': {e}[/red]")
-                continue
+                # Check if the task already exists
+                if self.task_exists(google_task_lists, page_id):
+                    console.print(f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]")
+                    progress.advance(task)
+                    continue
 
-            # Build the task description
-            try:
-                task_description = self.build_task_description(importance, text, urls, due_date)
-                print(f"  Task Description: {task_description}")
-            except Exception as e:
-                print(f"[red]Error building task description: {e}[/red]")
-                continue
-            
-            # Create the task
-            try:
-                self.google_tasks_manager.create_task(
-                    tasklist_id=tasklist_id,
-                    task_title=f"{parent_page_name} - {page_title} | ({page_id})",
-                    task_notes=task_description,
-                    due_date=due_date
-                )
-                print(f"[green]Task for page '{page_title}' created successfully![/green]")
-            except Exception as e:
-                print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
+                # Ensure task list exists for the tag
+                try:
+                    tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
+                    console.print(f"  Task List ID for tag '{tag}': {tasklist_id}")
+                except Exception as e:
+                    console.print(f"[red]Error ensuring task list for tag '{tag}': {e}[/red]")
+                    progress.advance(task)
+                    continue
 
+                # Build the task description
+                try:
+                    task_description = self.build_task_description(importance, text, urls, due_date)
+                    console.print(f"  Task Description: {task_description}")
+                except Exception as e:
+                    console.print(f"[red]Error building task description: {e}[/red]")
+                    progress.advance(task)
+                    continue
+
+                # Create the task
+                try:
+                    self.google_tasks_manager.create_task(
+                        tasklist_id=tasklist_id,
+                        task_title=f"{parent_page_name} - {page_title} | ({page_id})",
+                        task_notes=task_description,
+                        due_date=due_date
+                    )
+                    console.print(f"[green]Task for page '{page_title}' created successfully![/green]")
+                except Exception as e:
+                    console.print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
+
+                # Update progress bar
+                progress.advance(task)
 
 
     def task_exists(self, google_task_lists: Dict[str, str], page_id: str) -> bool:
