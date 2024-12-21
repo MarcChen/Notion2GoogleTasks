@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 
 .env
+**token.json
+*token.json
