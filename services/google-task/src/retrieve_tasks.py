@@ -185,3 +185,52 @@ def mark_task_completed(token_path, tasklist_id, task_id):
         print(f"Task marked as completed.")
     except Exception as e:
         print(f"Error marking task as completed: {e}")
+
+def create_subtask(token_path, tasklist_id, parent_task_id, subtask_title, subtask_notes=None, due_date=None):
+    """
+    Creates a subtask under a specified parent task.
+
+    Args:
+        token_path (str): Path to the token file.
+        tasklist_id (str): ID of the task list.
+        parent_task_id (str): ID of the parent task.
+        subtask_title (str): Title of the subtask.
+        subtask_notes (str): Notes for the subtask (optional).
+        due_date (str): Due date in RFC 3339 format (optional).
+
+    Returns:
+        dict: Details of the created subtask.
+    """
+    credentials = load_credentials(token_path)
+    credentials = refresh_access_token(credentials, token_path)
+
+    service = build('tasks', 'v1', credentials=credentials)
+
+    try:
+        # Step 1: Create the task
+        subtask_body = {
+            "title": subtask_title,
+            "notes": subtask_notes,
+            "due": due_date,
+        }
+        created_task = service.tasks().insert(tasklist=tasklist_id, body=subtask_body).execute()
+        task_id = created_task['id']
+        print(f"Task created: {created_task['title']} (ID: {task_id})")
+
+        # Step 2: Move the task under the parent task
+        moved_task = service.tasks().move(
+            tasklist=tasklist_id,
+            task=task_id,
+            parent=parent_task_id
+        ).execute()
+        print(f"Subtask moved under parent task: {moved_task['title']} (ID: {moved_task['id']})")
+
+        # Return details of the subtask
+        return {
+            "title": moved_task['title'],
+            "id": moved_task['id'],
+            "parent": moved_task.get("parent"),
+            "status": moved_task.get("status")
+        }
+    except Exception as e:
+        raise Exception(f"Error creating subtask: {e}")
