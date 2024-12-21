@@ -80,7 +80,7 @@ def get_filtered_sorted_database(database_id):
     ]
 }
 
-    
+
     # Send request to Notion API
     response = requests.post(url, headers=HEADERS, json=query_payload)
     if response.status_code == 200:
@@ -89,8 +89,83 @@ def get_filtered_sorted_database(database_id):
         print(f"Error: {response.status_code}, {response.text}")
         return None
 
+def parse_notion_response(response):
+    """
+    Parse the Notion response to extract relevant fields.
+
+    Args:
+        response (dict): The JSON response from Notion API.
+
+    Returns:
+        list: A list of dictionaries containing extracted fields.
+    """
+    results = response.get('results', [])
+    parsed_data = []
+
+    for page in results:
+        properties = page.get('properties', {})
+        
+        # Extract required fields
+        tag = properties.get('Tags', {}).get('multi_select', [])
+        if tag != []:
+            tag = tag[0].get('name')
+        
+        importance = properties.get('Importance', {}).get('select', {}).get('name', None)
+        unique_id = properties.get('ID', {}).get('unique_id', {}).get('number', None)
+        
+        # Safely handle 'Due Date' which may be None
+        due_date_property = properties.get('Due Date', {}).get('date')
+        due_date = due_date_property.get('start', None) if due_date_property else None
+        
+        page_url = page.get('url', None)
+        estimates = properties.get('Estimates', {}).get('select', {}).get('name', None)
+        title = properties.get('Name', {}).get('title', [])
+        title_text = title[0]['text']['content'] if title else None
+        
+        text_property = properties.get('Text', {}).get('rich_text', [])
+        if text_property != []:
+            text_property = text_property[0].get('text', None).get('content', None)
+
+        url_property = properties.get('URL', {}).get('rich_text', [])
+        links = [
+            text.get('text', {}).get('link', {}).get('url')
+            for text in url_property
+            if text.get('text', {}).get('link')
+        ]
+
+
+        laste_edited_time = page.get('last_edited_time', None)
+        created_time = page.get('created_time', None)
+
+        parent_page_id = properties.get('Parent item', {}).get('relation', [])
+        if parent_page_id != []:
+            parent_page_id = parent_page_id[0].get('id')
+
+        # Append parsed data to the list
+        parsed_data.append({
+            "unique_id": unique_id,
+            "title": title_text,
+            "created_time": created_time,
+            "last_edited_time": laste_edited_time,
+            "estimates": estimates,
+            "importance": importance,
+            "tags": tag,
+            "due_date": due_date,
+            "page_url": page_url,
+            "text": text_property,
+            "url": links,
+            "parent_page_id": parent_page_id
+        })
+
+    return parsed_data
+
+
 # Fetch and print the filtered and sorted database results
 database_data = get_filtered_sorted_database(DATABASE_ID)
 if database_data:
     print("Filtered and Sorted Database Content:")
-    print(database_data)
+    # print(database_data)
+    parsed_data = parse_notion_response(database_data)
+    for item in parsed_data:
+        print(item)
+
