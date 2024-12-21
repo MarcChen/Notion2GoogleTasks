@@ -1,0 +1,177 @@
+from ast import Not
+from datetime import datetime
+import os
+from typing import Optional, Dict, List
+from rich import print
+from rich.progress import Progress
+from services.notion.src.notion_client import NotionClient
+from services.google_task.src.retrieve_tasks import GoogleTasksManager
+
+
+class NotionToGoogleTaskSyncer:
+    def __init__(self, notion_client: NotionClient, google_tasks_manager: GoogleTasksManager):
+        self.notion_client = notion_client
+        self.google_tasks_manager = google_tasks_manager
+
+    def sync_pages_to_google_tasks(self):
+        """
+        Synchronizes Notion pages to Google Tasks.
+        """
+        notion_pages = self.notion_client.get_filtered_sorted_database()
+        if not notion_pages:
+            print("[red]No pages retrieved from Notion.[/red]")
+            return
+
+        parsed_pages = self.notion_client.parse_notion_response(notion_pages)
+        google_task_lists = self.google_tasks_manager.list_task_lists()
+
+        print(f"Google Task Lists: {google_task_lists}")
+
+        for page in parsed_pages:
+            page_id = page['unique_id']
+            page_title = page['title']
+            tag = page['tags'] or "NoTag" 
+            due_date = self.compute_due_date(page['due_date'])           
+            importance = page['importance']
+            text = page['text']
+            urls = page['url']
+            parent_page_name = page['parent_page_name'] or None 
+
+            print(f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]")
+
+            # Check if the task already exists
+            if self.task_exists(google_task_lists, page_id):
+                print(f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]")
+                continue
+
+            # Ensure task list exists for the tag
+            try:
+                tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
+                print(f"  Task List ID for tag '{tag}': {tasklist_id}")
+            except Exception as e:
+                print(f"[red]Error ensuring task list for tag '{tag}': {e}[/red]")
+                continue
+
+            # Build the task description
+            try:
+                task_description = self.build_task_description(importance, text, urls, due_date)
+                print(f"  Task Description: {task_description}")
+            except Exception as e:
+                print(f"[red]Error building task description: {e}[/red]")
+                continue
+            
+            # Create the task
+            try:
+                self.google_tasks_manager.create_task(
+                    tasklist_id=tasklist_id,
+                    task_title=f"{parent_page_name} - {page_title} | ({page_id})",
+                    task_notes=task_description,
+                    due_date=due_date
+                )
+                print(f"[green]Task for page '{page_title}' created successfully![/green]")
+            except Exception as e:
+                print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
+
+
+
+    def task_exists(self, google_task_lists: Dict[str, str], page_id: str) -> bool:
+        """
+        Checks if a task for the given Notion page ID already exists in Google Tasks.
+
+        Args:
+            google_task_lists (Dict[str, str]): A dictionary of Google task lists with their IDs.
+            page_id (str): The unique ID of the Notion page.
+
+        Returns:
+            bool: True if the task exists, False otherwise.
+        """
+        for tasklist_name, tasklist_id in google_task_lists.items():
+            tasks = self.google_tasks_manager.list_tasks_in_tasklist(tasklist_id)
+            if any(task_title.endswith(f"({page_id})") for task_title in tasks):
+                return True
+        return False
+
+    def ensure_tasklist_exists(self, tag: Optional[str], google_task_lists: Dict[str, str]) -> str:
+        """
+        Ensures that a task list for the given tag exists, creating it if necessary.
+
+        Args:
+            tag (Optional[str]): The tag associated with the task list.
+
+        Returns:
+            str: The ID of the existing or newly created task list.
+        """
+        if not tag:
+            tag = "NoTag"  # Use a NoTag name if no tag is provided
+
+        if tag not in google_task_lists:
+            created_tasklist = self.google_tasks_manager.create_task_list(tag)
+            google_task_lists[tag] = created_tasklist['id']
+
+        return google_task_lists[tag]
+
+    def build_task_description(self, importance: Optional[str], text: Optional[str], urls: Optional[List[str]], due_date: Optional[datetime]) -> str:
+        """
+        Builds a task description from the given properties.
+
+        Args:
+            importance (Optional[str]): The importance level of the task.
+            text (Optional[str]): The text content from the Notion page.
+            urls (Optional[List[str]]): A list of URLs from the Notion page.
+            due_date (Optional[str]): The due date of the task.
+
+        Returns:
+            str: The task description.
+        """
+        description_lines = []
+        if importance:
+            description_lines.append(f"Importance: {importance}")
+        if text:
+            description_lines.append(f"Details: {text}")
+        if urls:
+            description_lines.append("Links:")
+            for url in urls:
+                description_lines.append(f" - {url}")
+        if due_date:
+            description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
+        return "\n".join(description_lines)
+
+    def compute_due_date(self, due_date_str: Optional[str]) -> datetime:
+        """
+        Computes the due date, adjusting it to today if the difference exceeds 14 days.
+
+        Args:
+            due_date_str (Optional[str]): The due date as a string in ISO format, or None.
+
+        Returns:
+            datetime: The adjusted due date as a `datetime` object.
+        """
+        today = datetime.utcnow()
+
+        if due_date_str:
+            due_date = datetime.fromisoformat(due_date_str)
+        else:
+            due_date = today  # Default to today if no due date is provided
+
+        # Adjust the due date if it's more than 14 days from today
+        if (due_date - today).days > 14:
+            due_date = today
+
+        return due_date
+
+if __name__ == "__main__":
+    token_path = os.getenv("TOKEN_PATH")
+
+
+    notion_api_key = os.getenv("NOTION_API")
+    database_id = os.getenv("DATABASE_ID")
+    project_root = os.getenv("PROJECT_ROOT")
+    assert notion_api_key, "NOTION_API environment variable is required."
+    assert database_id, "DATABASE_ID environment variable is required."
+    assert project_root, "PROJECT_ROOT environment variable is required."
+
+    notion_client = NotionClient(notion_api_key, database_id, project_root)
+    google_tasks_manager = GoogleTasksManager(token_path)
+    syncer = NotionToGoogleTaskSyncer(notion_client, google_tasks_manager)
+
+    syncer.sync_pages_to_google_tasks()

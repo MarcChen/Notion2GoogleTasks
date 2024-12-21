@@ -238,3 +238,19 @@ class NotionClient:
         except Exception as e:
             print(f"Unexpected error while parsing Notion response: {e}")
             return []
+
+if __name__ == "__main__":
+    notion_api_key = os.getenv("NOTION_API")
+    database_id = os.getenv("DATABASE_ID")
+    project_root = os.getenv("PROJECT_ROOT")
+    assert notion_api_key, "NOTION_API environment variable is required."
+    assert database_id, "DATABASE_ID environment variable is required."
+    assert project_root, "PROJECT_ROOT environment variable is required."
+
+    client = NotionClient(notion_api_key, database_id, project_root)
+    response = client.get_filtered_sorted_database()
+    if response:
+        parsed_data = client.parse_notion_response(response)
+        print(parsed_data)
+    else:
+        print("Failed to fetch database entries.")
