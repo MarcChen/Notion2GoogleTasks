@@ -80,7 +80,36 @@ def fetch_parent_page_names(parent_page_ids):
 
     return parent_page_names
 
+def mark_page_as_completed(page_id):
+    """
+    Marks the 'Status' property of a Notion page as 'Done'.
+    
+    Args:
+        page_id (str): The ID of the Notion page to update.
+    
+    Returns:
+        dict: The JSON response from the Notion API if successful.
+        None: If the request fails, prints an error and returns None.
+    """
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    payload = {
+        "properties": {
+            "Status": {
+                "status": {
+                    "name": "Done"
+                }
+            }
+        }
+    }
 
+    response = requests.patch(url, headers=HEADERS, json=payload)
+
+    if response.status_code == 200:
+        print(f"Page {page_id} marked as 'Done' successfully!")
+        return response.json()
+    else:
+        print(f"Error marking page {page_id} as 'Done': {response.status_code}, {response.text}")
+        return None
 
 def parse_notion_response(response):
     """
@@ -98,6 +127,7 @@ def parse_notion_response(response):
     # Parse each page
     for page in results:
         properties = page.get('properties', {})
+        page_id = page.get('id', None).replace("-", "")
 
         # Extract required fields
         tag = properties.get('Tags', {}).get('multi_select', None)
@@ -148,6 +178,7 @@ def parse_notion_response(response):
         # Append parsed data to the list
         parsed_data.append({
             "unique_id": unique_id,
+            "page_id": page_id,
             "title": title_text,
             "created_time": created_time,
             "last_edited_time": laste_edited_time,
@@ -181,9 +212,8 @@ def parse_notion_response(response):
 # Fetch and print the filtered and sorted database results
 database_data = get_filtered_sorted_database(DATABASE_ID)
 if database_data:
-    print("Filtered and Sorted Database Content:")
     # print(database_data)
     parsed_data = parse_notion_response(database_data)
-    for item in parsed_data:
-        print(item)
-
+    # for item in parsed_data:
+    #     print(item)
+    # mark_page_as_completed("16319fda-9f9d-8052-8d9d-ecdf97ad3af2")
