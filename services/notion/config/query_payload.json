@@ -1,0 +1,44 @@
+{
+    "filter": {
+        "and": [
+            {
+                "property": "Today",
+                "checkbox": {
+                    "equals": true
+                }
+            },
+            {
+                "and": [
+                    {
+                        "property": "Status",
+                        "status": {
+                            "does_not_equal": "backlog"
+                        }
+                    },
+                    {
+                        "property": "Status",
+                        "status": {
+                            "does_not_equal": "abandoned"
+                        }
+                    },
+                    {
+                        "property": "Status",
+                        "status": {
+                            "does_not_equal": "Done"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "sorts": [
+        {
+            "property": "Importance",
+            "direction": "descending"
+        },
+        {
+            "property": "Due Date",
+            "direction": "ascending"
+        }
+    ]
+}

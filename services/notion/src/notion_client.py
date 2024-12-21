@@ -110,6 +110,41 @@ class NotionClient:
             print(f"Error marking page {page_id} as 'Done': {e}")
             return None
 
+    def create_new_page(self, title: str) -> Optional[Dict]:
+        """
+        Create a new page in the Notion database with the "Today" checkbox set to True.
+
+        Args:
+            title (str): The title of the new page.
+
+        Returns:
+            Optional[Dict]: The JSON response from the Notion API if successful; None otherwise.
+        """
+        url = "https://api.notion.com/v1/pages"
+        payload = {
+            "parent": {"database_id": self.database_id},
+            "properties": {
+                "Name": {
+                    "title": [
+                        {"text": {"content": title}}
+                    ]
+                },
+                "Today": {
+                    "checkbox": True
+                }
+            }
+        }
+
+        try:
+            response = requests.post(url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            print(f"Page '{title}' created successfully with 'Today' checkbox set to True!")
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error creating page '{title}': {e}")
+            return None
+
     def parse_notion_response(self, response: Dict) -> List[Dict]:
         """
         Parse the Notion response to extract relevant fields, including parent page names.
@@ -203,16 +238,3 @@ class NotionClient:
         except Exception as e:
             print(f"Unexpected error while parsing Notion response: {e}")
             return []
-
-# Example usage (to be removed when testing):
-if __name__ == "__main__":
-    NOTION_API_KEY = os.getenv("NOTION_API")
-    DATABASE_ID = os.getenv("DATABASE_ID")
-    PROJECT_ROOT = os.getenv("PROJECT_ROOT")
-
-    notion_client = NotionClient(NOTION_API_KEY, DATABASE_ID, PROJECT_ROOT)
-    database_data = notion_client.get_filtered_sorted_database()
-    if database_data:
-        parsed_data = notion_client.parse_notion_response(database_data)
-        for item in parsed_data:
-            print(item)
