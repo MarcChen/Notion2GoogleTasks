@@ -112,8 +112,13 @@ class GoogleTasksManager:
         try:
             task_body = {"title": task_title, "notes": task_notes}
             if due_date:
-                task_body["due"] = due_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ')  # Convert datetime to RFC 3339 format
-            return self.service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()
+                if isinstance(due_date, datetime):
+                    due_date = due_date.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'  # Convert datetime to RFC 3339
+                elif not isinstance(due_date, str):
+                    raise ValueError("due_date must be a datetime object or an ISO 8601 formatted string")
+                task_body["due"] = due_date
+            response = self.service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()
+            return response
         except Exception as e:
             raise Exception(f"Error creating task: {e}")
 

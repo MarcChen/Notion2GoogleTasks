@@ -102,9 +102,12 @@ class NotionClient:
 
         try:
             response = requests.patch(url, headers=self.headers, json=payload)
-            response.raise_for_status()
-            print(f"Page {page_id} marked as 'Done' successfully!")
-            return response.json()
+            if response.status_code == 200:
+                print(f"Page {page_id} marked as 'Done' successfully!")
+                return response.json()
+            else:
+                print(f"Failed to mark page {page_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}")
+                return None
 
         except requests.exceptions.RequestException as e:
             print(f"Error marking page {page_id} as 'Done': {e}")
@@ -238,19 +241,3 @@ class NotionClient:
         except Exception as e:
             print(f"Unexpected error while parsing Notion response: {e}")
             return []
-
-if __name__ == "__main__":
-    notion_api_key = os.getenv("NOTION_API")
-    database_id = os.getenv("DATABASE_ID")
-    project_root = os.getenv("PROJECT_ROOT")
-    assert notion_api_key, "NOTION_API environment variable is required."
-    assert database_id, "DATABASE_ID environment variable is required."
-    assert project_root, "PROJECT_ROOT environment variable is required."
-
-    client = NotionClient(notion_api_key, database_id, project_root)
-    response = client.get_filtered_sorted_database()
-    if response:
-        parsed_data = client.parse_notion_response(response)
-        print(parsed_data)
-    else:
-        print("Failed to fetch database entries.")
