@@ -1,0 +1,26 @@
+name: Enforce PR Labels
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, edited, synchronize]
+
+jobs:
+  check-label:
+    name: Ensure PR has a valid version label
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Check for valid labels
+      - name: Validate PR labels
+        run: |
+          labels=$(echo "${{ github.event.pull_request.labels }}" | jq -r '.[].name')
+          if echo "$labels" | grep -Eq "^(major|minor|patch)$"; then
+            echo "Valid label found: $labels"
+          else
+            echo "Error: PR must have one of the following labels: major, minor, or patch."
+            exit 1
+          fi
