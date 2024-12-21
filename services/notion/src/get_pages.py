@@ -1,9 +1,12 @@
 import requests
 import os
+from rich import print
+import json
 
 # Replace with your Notion API key and database ID
 NOTION_API_KEY = os.getenv("NOTION_API")
 DATABASE_ID = os.getenv("DATABASE_ID")
+PROJECT_ROOT = os.getenv("PROJECT_ROOT")
 
 # Notion API base URL
 NOTION_URL = "https://api.notion.com/v1/databases/"
@@ -34,51 +37,9 @@ def get_filtered_sorted_database(database_id):
     url = f"{NOTION_URL}{database_id}/query"
     
     # Query payload: Add filter and sorting 
+    with open(f"{PROJECT_ROOT}/services/notion/config/query_payload.json", 'r') as file: 
+        query_payload = json.load(file)
 
-    query_payload = {
-    "filter": {
-        "and": [
-            {
-                "property": "Today",
-                "checkbox": {
-                    "equals": True 
-                }
-            },
-            {
-                "and": [
-                    {
-                        "property": "Status",
-                        "status": {
-                            "does_not_equal": "backlog"
-                        }
-                    },
-                    {
-                        "property": "Status",
-                        "status": {
-                            "does_not_equal": "abandoned"
-                        }
-                    },
-                    {
-                        "property": "Status",
-                        "status": {
-                            "does_not_equal": "Done"
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "sorts": [
-        {
-            "property": "Importance",
-            "direction": "descending"
-        },
-        {
-            "property": "Due Date",
-            "direction": "ascending"
-        }
-    ]
-}
 
 
     # Send request to Notion API
@@ -89,57 +50,100 @@ def get_filtered_sorted_database(database_id):
         print(f"Error: {response.status_code}, {response.text}")
         return None
 
+def fetch_parent_page_names(parent_page_ids):
+    """
+    Fetches names of multiple parent pages in one batch to minimize API calls.
+
+    Args:
+        parent_page_ids (set): A set of unique parent page IDs (without hyphens).
+
+    Returns:
+        dict: A dictionary mapping parent page IDs to their names.
+    """
+    parent_page_names = {}
+    for page_id in parent_page_ids:
+        page_id = page_id.replace("-", "")  # Remove hyphens
+        url = f"https://api.notion.com/v1/pages/{page_id}"
+        response = requests.get(url, headers=HEADERS)
+        
+        if response.status_code == 200:
+            data = response.json()
+            # Extract the title from the page properties
+            title_property = data.get("properties", {}).get("Name", {}).get("title", None)
+            if title_property and len(title_property) > 0:
+                parent_page_names[page_id] = title_property[0].get("text", {}).get("content", None)
+            else:
+                parent_page_names[page_id] = None
+        else:
+            print(f"Error fetching parent page {page_id}: {response.status_code}, {response.text}")
+            parent_page_names[page_id] = None
+
+    return parent_page_names
+
+
+
 def parse_notion_response(response):
     """
-    Parse the Notion response to extract relevant fields.
+    Parse the Notion response to extract relevant fields, including parent page names.
 
     Args:
         response (dict): The JSON response from Notion API.
 
     Returns:
-        list: A list of dictionaries containing extracted fields.
+        list: A list of dictionaries containing extracted fields with None instead of [] or {}.
     """
     results = response.get('results', [])
     parsed_data = []
 
+    # Parse each page
     for page in results:
         properties = page.get('properties', {})
-        
+
         # Extract required fields
-        tag = properties.get('Tags', {}).get('multi_select', [])
-        if tag != []:
-            tag = tag[0].get('name')
-        
-        importance = properties.get('Importance', {}).get('select', {}).get('name', None)
+        tag = properties.get('Tags', {}).get('multi_select', None)
+        if tag and len(tag) > 0:
+            tag = tag[0].get('name', None)
+        else:
+            tag = None
+
+        # Safely handle 'select' for Importance
+        importance_property = properties.get('Importance', {}).get('select', None)
+        importance = importance_property.get('name', None) if importance_property else None
+
         unique_id = properties.get('ID', {}).get('unique_id', {}).get('number', None)
-        
+
         # Safely handle 'Due Date' which may be None
-        due_date_property = properties.get('Due Date', {}).get('date')
+        due_date_property = properties.get('Due Date', {}).get('date', None)
         due_date = due_date_property.get('start', None) if due_date_property else None
-        
+
         page_url = page.get('url', None)
-        estimates = properties.get('Estimates', {}).get('select', {}).get('name', None)
-        title = properties.get('Name', {}).get('title', [])
-        title_text = title[0]['text']['content'] if title else None
-        
-        text_property = properties.get('Text', {}).get('rich_text', [])
-        if text_property != []:
-            text_property = text_property[0].get('text', None).get('content', None)
 
-        url_property = properties.get('URL', {}).get('rich_text', [])
+        # Safely handle 'select' for Estimates
+        estimates_property = properties.get('Estimates', {}).get('select', None)
+        estimates = estimates_property.get('name', None) if estimates_property else None
+
+        title = properties.get('Name', {}).get('title', None)
+        title_text = title[0]['text']['content'] if title and len(title) > 0 else None
+
+        text_property = properties.get('Text', {}).get('rich_text', None)
+        text_property = text_property[0].get('text', {}).get('content', None) if text_property and len(text_property) > 0 else None
+
+        url_property = properties.get('URL', {}).get('rich_text', None)
         links = [
-            text.get('text', {}).get('link', {}).get('url')
-            for text in url_property
+            text.get('text', {}).get('link', {}).get('url', None)
+            for text in (url_property or [])
             if text.get('text', {}).get('link')
-        ]
-
+        ] if url_property else None
+        links = links if links and len(links) > 0 else None
 
         laste_edited_time = page.get('last_edited_time', None)
         created_time = page.get('created_time', None)
 
-        parent_page_id = properties.get('Parent item', {}).get('relation', [])
-        if parent_page_id != []:
-            parent_page_id = parent_page_id[0].get('id')
+        parent_page_id = properties.get('Parent item', {}).get('relation', None)
+        if parent_page_id and len(parent_page_id) > 0:
+            parent_page_id = parent_page_id[0].get('id', "").replace("-", "")
+        else:
+            parent_page_id = None
 
         # Append parsed data to the list
         parsed_data.append({
@@ -157,7 +161,21 @@ def parse_notion_response(response):
             "parent_page_id": parent_page_id
         })
 
+    # Collect unique parent page IDs
+    parent_page_ids = {item['parent_page_id'] for item in parsed_data if item['parent_page_id']}
+    parent_page_names = fetch_parent_page_names(parent_page_ids)
+
+    # Add parent page names to the parsed data
+    for item in parsed_data:
+        if item['parent_page_id']:
+            item['parent_page_name'] = parent_page_names.get(item['parent_page_id'], None)
+        else:
+            item['parent_page_name'] = None
+
     return parsed_data
+
+
+
 
 
 # Fetch and print the filtered and sorted database results
