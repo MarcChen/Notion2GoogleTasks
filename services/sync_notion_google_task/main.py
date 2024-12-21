@@ -74,7 +74,7 @@ class NotionToGoogleTaskSyncer:
                 try:
                     self.google_tasks_manager.create_task(
                         tasklist_id=tasklist_id,
-                        task_title=f"{parent_page_name} - {page_title} | ({page_id})",
+                        task_title=f"{page_title} - {parent_page_name} | ({page_id})",
                         task_notes=task_description,
                         due_date=due_date
                     )
