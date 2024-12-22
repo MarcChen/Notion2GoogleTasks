@@ -69,7 +69,7 @@ jobs:
         run: |
           pr_title="${{ github.event.pull_request.title }}"
           pr_body="${{ github.event.pull_request.body }}"
-          pr_body=$(echo "$pr_body" | sed -e 's/\r//g' -e 's/```//g')
+          pr_body=$(echo "$pr_body" | sed  -e 's/`//g')
           pr_author="${{ github.event.pull_request.user.login }}"
           pr_number="${{ github.event.pull_request.number }}"
           date=$(date '+%Y-%m-%d')
