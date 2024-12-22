@@ -102,9 +102,12 @@ class NotionClient:
 
         try:
             response = requests.patch(url, headers=self.headers, json=payload)
-            response.raise_for_status()
-            print(f"Page {page_id} marked as 'Done' successfully!")
-            return response.json()
+            if response.status_code == 200:
+                print(f"Page {page_id} marked as 'Done' successfully!")
+                return response.json()
+            else:
+                print(f"Failed to mark page {page_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}")
+                return None
 
         except requests.exceptions.RequestException as e:
             print(f"Error marking page {page_id} as 'Done': {e}")

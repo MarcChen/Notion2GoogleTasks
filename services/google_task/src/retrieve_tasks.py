@@ -2,8 +2,8 @@ from typing import Optional, Dict, Any
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from .authentification import load_credentials, refresh_access_token, print_token_ttl
-
+from services.google_task.src.authentification import load_credentials, refresh_access_token, print_token_ttl
+from datetime import datetime
 
 class GoogleTasksManager:
     """
@@ -95,7 +95,7 @@ class GoogleTasksManager:
         tasklist_id: str,
         task_title: str,
         task_notes: Optional[str] = None,
-        due_date: Optional[str] = None,
+        due_date: Optional[datetime] = None,
     ) -> Dict[str, Any]:
         """
         Creates a new task in a specified task list.
@@ -104,14 +104,21 @@ class GoogleTasksManager:
             tasklist_id (str): ID of the task list.
             task_title (str): Title of the new task.
             task_notes (Optional[str]): Notes for the task (optional).
-            due_date (Optional[str]): Due date in RFC 3339 format (optional).
+            due_date (Optional[datetime]): Due date as a datetime object (optional).
 
         Returns:
             dict: Details of the created task.
         """
         try:
-            task_body = {"title": task_title, "notes": task_notes, "due": due_date}
-            return self.service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()
+            task_body = {"title": task_title, "notes": task_notes}
+            if due_date:
+                if isinstance(due_date, datetime):
+                    due_date = due_date.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'  # Convert datetime to RFC 3339
+                elif not isinstance(due_date, str):
+                    raise ValueError("due_date must be a datetime object or an ISO 8601 formatted string")
+                task_body["due"] = due_date
+            response = self.service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()
+            return response
         except Exception as e:
             raise Exception(f"Error creating task: {e}")
 

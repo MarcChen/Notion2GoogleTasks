@@ -30,4 +30,6 @@ Follow these instructions:
 
 Note: Moving tasks to a different task list isn't supported!
 
+Additionally, setting the time for the due date is not supported. The due date only records date information; the time portion of the timestamp is discarded when setting the due date. It isn't possible to read or write the time that a task is due via the API.
+
 For more information, refer to the [Google Tasks API documentation](https://developers.google.com/resources/api-libraries/documentation/tasks/v1/python/latest/index.html).
