@@ -40,7 +40,7 @@ jobs:
       - name: Generate Google API Token
         run: |
           echo "Generating token file..."
-          python $GITHUB_WORKSPACE/services/google_task/config/config_creds.py --save_dir $GITHUB_WORKSPACE
+          poetry run python $GITHUB_WORKSPACE/services/google_task/config/config_creds.py --save_dir $GITHUB_WORKSPACE
         env:
           GOOGLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "Running sync script..."
           export TOKEN_PATH="${{ github.workspace }}/token.json"
-          python $GITHUB_WORKSPACE/main.py
+          poetry run python $GITHUB_WORKSPACE/main.py
         env:
           NOTION_API: ${{ secrets.NOTION_API }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
