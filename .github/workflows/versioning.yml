@@ -68,8 +68,9 @@ jobs:
         run: |
           set -e
           echo "${{ github.event.pull_request.body }}" > pr_body_raw.txt
-          perl -0777 -pe 's/```(.*?)```/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
-          perl -0777 -pe 's/`(.*?)`/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
+          perl -0777 -pe 's/```([\s\S]*?)```/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
+          perl -0777 -pe 's/`([\s\S]*?)`/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
+
           pr_body="$(cat pr_body_raw.txt)"
           pr_title="${{ github.event.pull_request.title }}"
           pr_author="${{ github.event.pull_request.user.login }}"
@@ -80,8 +81,6 @@ jobs:
           echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
           echo "${pr_body}" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
-
-          echo $pr_body
 
       # Commit and push the updated version and changelog
       - name: Commit and push changes
