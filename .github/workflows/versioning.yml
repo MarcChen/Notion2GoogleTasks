@@ -67,14 +67,16 @@ jobs:
       # Update Changelog
       - name: Update Changelog
         run: |
+          set -e
+          echo "${{ github.event.pull_request.body }}" > pr_body_raw.txt
+          sed -i 's/`//g' pr_body_raw.txt
+          pr_body="$(cat pr_body_raw.txt)"
+
           pr_title="${{ github.event.pull_request.title }}"
-          pr_body="${{ github.event.pull_request.body }}"
-          pr_body="${pr_body//\`/}"
           pr_author="${{ github.event.pull_request.user.login }}"
           pr_number="${{ github.event.pull_request.number }}"
-          date=$(date '+%Y-%m-%d')
+          date="$(date '+%Y-%m-%d')"
 
-          # Append changes to the changelog
           echo "## [${{ env.new_version }}] - $date" >> CHANGELOG.md
           echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
           echo "${pr_body}" >> CHANGELOG.md
