@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Get current version
       - name: Get current version
         id: current_version
         run: |
           if [ ! -f VERSION ]; then echo "VERSION file not found"; exit 1; fi
           echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
+      # Determine the bump type from PR labels
       - name: Determine bump type from labels
         id: determine_version
         run: |
@@ -34,6 +37,7 @@ jobs:
             exit 1
           fi
 
+      # Increment the version
       - name: Increment version
         id: increment_version
         run: |
@@ -60,24 +64,23 @@ jobs:
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "${new_version}" > VERSION
 
-          - name: Update Changelog
-          run: |
-            pr_title="${{ github.event.pull_request.title }}"
-            # Escape any double-quotes in the PR body
-            pr_body="$(echo "${{ github.event.pull_request.body }}" | sed 's/"/\\"/g')"
-            pr_author="${{ github.event.pull_request.user.login }}"
-            pr_number="${{ github.event.pull_request.number }}"
-            date=$(date '+%Y-%m-%d')
-        
-            echo "## [${{ env.new_version }}] - $date" >> CHANGELOG.md
-            echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
-        
-            # Use printf to safely handle newlines and special characters
-            printf '%s\n' "${pr_body}" >> CHANGELOG.md
-        
-            echo "" >> CHANGELOG.md
-        
+      # Update Changelog
+      - name: Update Changelog
+        run: |
+          pr_title="${{ github.event.pull_request.title }}"
+          pr_body="${{ github.event.pull_request.body }}"
+          pr_body=$(echo "$pr_body" | sed -e 's/\r//g' -e 's/```//g')
+          pr_author="${{ github.event.pull_request.user.login }}"
+          pr_number="${{ github.event.pull_request.number }}"
+          date=$(date '+%Y-%m-%d')
 
+          # Append changes to the changelog
+          echo "## [${{ env.new_version }}] - $date" >> CHANGELOG.md
+          echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
+          echo "${pr_body}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+      # Commit and push the updated version and changelog
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
@@ -86,6 +89,7 @@ jobs:
           git commit -m "Bump version to ${{ env.new_version }} and update changelog"
           git push origin main
 
+      # Create and push a new tag
       - name: Create and push tag
         run: |
           git tag -a "v${{ env.new_version }}" -m "Version ${{ env.new_version }}"
