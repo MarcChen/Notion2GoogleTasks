@@ -10,18 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Get current version
       - name: Get current version
         id: current_version
         run: |
           if [ ! -f VERSION ]; then echo "VERSION file not found"; exit 1; fi
           echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
-      # Determine the bump type from PR labels
       - name: Determine bump type from labels
         id: determine_version
         run: |
@@ -37,7 +34,6 @@ jobs:
             exit 1
           fi
 
-      # Increment the version
       - name: Increment version
         id: increment_version
         run: |
@@ -64,7 +60,6 @@ jobs:
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "${new_version}" > VERSION
 
-      # Update Changelog
       - name: Update Changelog
         run: |
           pr_title="${{ github.event.pull_request.title }}"
@@ -79,7 +74,6 @@ jobs:
           echo "${pr_body}" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
 
-      # Commit and push the updated version and changelog
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
@@ -88,7 +82,6 @@ jobs:
           git commit -m "Bump version to ${{ env.new_version }} and update changelog"
           git push origin main
 
-      # Create and push a new tag
       - name: Create and push tag
         run: |
           git tag -a "v${{ env.new_version }}" -m "Version ${{ env.new_version }}"
