@@ -1,4 +1,3 @@
-from ast import Not
 from datetime import datetime
 import os
 from typing import Optional, Dict, List
@@ -9,11 +8,10 @@ from rich.live import Live
 from services.notion.src.notion_client import NotionClient
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
 
-
 class NotionToGoogleTaskSyncer:
-    def __init__(self, notion_client: NotionClient, google_tasks_manager: GoogleTasksManager):
-        self.notion_client = notion_client
-        self.google_tasks_manager = google_tasks_manager
+    def __init__(self, notion_api_key: str, database_id: str, project_root: str, token_path: str):
+        self.notion_client = NotionClient(notion_api_key, database_id, project_root)
+        self.google_tasks_manager = GoogleTasksManager(token_path)
 
     def sync_pages_to_google_tasks(self):
         """
@@ -32,7 +30,6 @@ class NotionToGoogleTaskSyncer:
 
         task = progress.add_task("[cyan]Processing Pages...", total=len(parsed_pages))
 
-        # Use Rich Live for the progress bar
         with Live(progress, console=console, refresh_per_second=10):
             for page in parsed_pages:
                 page_id = page['unique_id']
@@ -46,13 +43,11 @@ class NotionToGoogleTaskSyncer:
 
                 console.print(f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]")
 
-                # Check if the task already exists
                 if self.task_exists(google_task_lists, page_id):
                     console.print(f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]")
                     progress.advance(task)
                     continue
 
-                # Ensure task list exists for the tag
                 try:
                     tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
                     console.print(f"  Task List ID for tag '{tag}': {tasklist_id}")
@@ -61,7 +56,6 @@ class NotionToGoogleTaskSyncer:
                     progress.advance(task)
                     continue
 
-                # Build the task description
                 try:
                     task_description = self.build_task_description(importance, text, urls, due_date)
                     console.print(f"  Task Description: {task_description}")
@@ -70,7 +64,6 @@ class NotionToGoogleTaskSyncer:
                     progress.advance(task)
                     continue
 
-                # Create the task
                 try:
                     self.google_tasks_manager.create_task(
                         tasklist_id=tasklist_id,
@@ -82,9 +75,7 @@ class NotionToGoogleTaskSyncer:
                 except Exception as e:
                     console.print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
 
-                # Update progress bar
                 progress.advance(task)
-
 
     def task_exists(self, google_task_lists: Dict[str, str], page_id: str) -> bool:
         """
@@ -172,18 +163,15 @@ class NotionToGoogleTaskSyncer:
         return due_date
 
 if __name__ == "__main__":
-    token_path = os.getenv("TOKEN_PATH")
-
-
     notion_api_key = os.getenv("NOTION_API")
     database_id = os.getenv("DATABASE_ID")
+    token_path = os.getenv("TOKEN_PATH")
     project_root = os.getenv("PROJECT_ROOT")
+
     assert notion_api_key, "NOTION_API environment variable is required."
     assert database_id, "DATABASE_ID environment variable is required."
+    assert token_path, "TOKEN_PATH environment variable is required."
     assert project_root, "PROJECT_ROOT environment variable is required."
 
-    notion_client = NotionClient(notion_api_key, database_id, project_root)
-    google_tasks_manager = GoogleTasksManager(token_path)
-    syncer = NotionToGoogleTaskSyncer(notion_client, google_tasks_manager)
-
+    syncer = NotionToGoogleTaskSyncer(notion_api_key, database_id, project_root, token_path)
     syncer.sync_pages_to_google_tasks()

@@ -1,11 +1,23 @@
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
-def test_build_task_description():
-    syncer = NotionToGoogleTaskSyncer(None, None)
-    
+@pytest.fixture
+def mock_syncer():
+    with patch("services.sync_notion_google_task.main.NotionClient") as MockNotionClient, \
+         patch("services.sync_notion_google_task.main.GoogleTasksManager") as MockGoogleTasksManager:
+        # Mock the dependencies
+        mock_notion_client = MockNotionClient.return_value
+        mock_google_tasks_manager = MockGoogleTasksManager.return_value
+        
+        # Return the class under test with mocked dependencies
+        syncer = NotionToGoogleTaskSyncer("mock_notion_api_key", "mock_database_id", "mock_project_root", "mock_token_path")
+        return syncer, mock_notion_client, mock_google_tasks_manager
+
+def test_build_task_description(mock_syncer):
+    syncer, _, _ = mock_syncer
+
     # Test case: All fields provided
     importance = "High"
     text = "Complete the report"
@@ -36,8 +48,8 @@ def test_build_task_description():
     description = syncer.build_task_description("Low", long_text, urls, due_date)
     assert long_text in description  # Ensure the full text is included
 
-def test_compute_due_date():
-    syncer = NotionToGoogleTaskSyncer(None, None)
+def test_compute_due_date(mock_syncer):
+    syncer, _, _ = mock_syncer
     
     # Test case: due_date is None
     due_date = syncer.compute_due_date(None)
@@ -67,15 +79,14 @@ def test_compute_due_date():
     computed_date = syncer.compute_due_date(exact_14_days)
     assert computed_date.date() == (datetime.utcnow() + timedelta(days=14)).date()
 
-def test_task_exists():
-    # Mock GoogleTasksManager
-    google_tasks_manager = MagicMock()
+def test_task_exists(mock_syncer):
+    syncer, _, google_tasks_manager = mock_syncer
+    
+    # Mock task list data
     google_tasks_manager.list_tasks_in_tasklist.side_effect = lambda tasklist_id: [
         "Task 1 | (1)",
         "Task 2 | (2)",
     ] if tasklist_id == "existing_tasklist_id" else []
-
-    syncer = NotionToGoogleTaskSyncer(None, google_tasks_manager)
 
     # Test case: Task exists
     google_task_lists = {"Work": "existing_tasklist_id"}
@@ -88,13 +99,11 @@ def test_task_exists():
     google_task_lists = {"Personal": "empty_tasklist_id"}
     assert syncer.task_exists(google_task_lists, "1") is False
 
-
-def test_ensure_tasklist_exists():
-    # Mock GoogleTasksManager
-    google_tasks_manager = MagicMock()
+def test_ensure_tasklist_exists(mock_syncer):
+    syncer, _, google_tasks_manager = mock_syncer
+    
+    # Mock creating a task list
     google_tasks_manager.create_task_list.return_value = {"id": "new_tasklist_id"}
-
-    syncer = NotionToGoogleTaskSyncer(None, google_tasks_manager)
 
     # Test case: Task list already exists
     google_task_lists = {"Work": "existing_tasklist_id"}
