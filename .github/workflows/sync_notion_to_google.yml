@@ -17,54 +17,80 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Python 3.10 if not installed
-        run: |
-          if ! command -v python3.10 &>/dev/null; then
-            echo "Python 3.10 is not installed. Installing..."
-            sudo apt-get update
-            sudo apt-get install -y python3.10 python3.10-venv
-          else
-            echo "Python 3.10 is already installed."
-          fi
-
-      - name: Install Poetry if not installed
+      # 1) Ensure Python 3.10
+      - name: Ensure Python 3.10 in PATH (install if missing)
         shell: bash
         run: |
-          if ! command -v poetry &>/dev/null; then
-            echo "Poetry not found. Installing..."
-            # Install Poetry using Python 3.10
-            curl -sSL https://install.python-poetry.org | python3.10 -
-            # Make sure Poetry is on the PATH for subsequent steps
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV
+          if command -v python3.10 &>/dev/null; then
+            echo "Python 3.10 is already installed at $(command -v python3.10)."
           else
-            echo "Poetry is already installed."
+            echo "Python 3.10 not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y python3.10 python3.10-venv
           fi
 
-      - name: Validate Dependencies
+          # Regardless of whether it was installed or pre-existing, 
+          # append the python3.10 directory to GITHUB_PATH.
+          if command -v python3.10 &>/dev/null; then
+            echo "$(dirname "$(command -v python3.10)")" >> $GITHUB_PATH
+          else
+            echo "ERROR: python3.10 not found even after installation."
+            exit 1
+          fi
+
+      # 2) Ensure Poetry
+      - name: Ensure Poetry in PATH (install if missing)
+        shell: bash
         run: |
+          if command -v poetry &>/dev/null; then
+            echo "Poetry is already installed at $(command -v poetry)."
+          else
+            echo "Poetry not found. Installing..."
+            curl -sSL https://install.python-poetry.org | python3.10 -
+          fi
+
+          # Poetry typically installs to ~/.local/bin. 
+          # We'll also add the directory containing the poetry executable itself.
+          if command -v poetry &>/dev/null; then
+            echo "$(dirname "$(command -v poetry)")" >> $GITHUB_PATH
+          else
+            echo "ERROR: Poetry not found in PATH after installation."
+            exit 1
+          fi
+
+      # 3) Validate Dependencies
+      - name: Validate Dependencies
+        shell: bash
+        run: |
+          echo "=== Checking Python 3.10 ==="
+          command -v python3.10 || { echo "python3.10 not found"; exit 1; }
           python3.10 --version
+
+          echo "=== Checking Poetry ==="
+          command -v poetry || { echo "Poetry not found"; exit 1; }
           poetry --version
+
+          echo "=== Running poetry check ==="
           poetry check
         working-directory: ${{ github.workspace }}
-        env:
-          # We ensure our updated path from above is included
-          PATH: $HOME/.local/bin:$PATH
 
+      # 4) Install Dependencies
       - name: Install Dependencies
+        shell: bash
         run: |
           poetry install
         working-directory: ${{ github.workspace }}
-        env:
-          PATH: $HOME/.local/bin:$PATH
 
+      # 5) Run Unit Tests
       - name: Run Unit Tests
+        shell: bash
         run: |
           poetry run pytest tests/unit --maxfail=1 --disable-warnings
         working-directory: ${{ github.workspace }}
-        env:
-          PATH: $HOME/.local/bin:$PATH
 
+      # 6) Generate Google API Token
       - name: Generate Google API Token
+        shell: bash
         run: |
           poetry run python3.10 services/google_task/config/config_creds.py --save_dir .
         working-directory: ${{ github.workspace }}
@@ -74,10 +100,14 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
+      # 7) Sync Notion to Google Tasks
       - name: Sync Notion to Google Tasks
+        shell: bash
         run: |
+          export TOKEN_PATH="${{ github.workspace }}/token.json"
           poetry run python3.10 main.py
         working-directory: ${{ github.workspace }}
         env:
           NOTION_API: ${{ secrets.NOTION_API }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          PROJECT_ROOT: ${{ github.workspace }}
