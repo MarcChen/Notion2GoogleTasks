@@ -67,11 +67,20 @@ jobs:
       - name: Update Changelog
         run: |
           set -e
-          echo "${{ github.event.pull_request.body }}" > pr_body_raw.txt
-          perl -0777 -pe 's/```([\s\S]*?)```/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
-          perl -0777 -pe 's/`([\s\S]*?)`/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
+          echo "before saving it"
 
+          cat << 'EOF' > pr_body_raw.txt
+          ${{ github.event.pull_request.body }}
+          EOF
+          echo "after saving it"
+
+          sed -E 's/`([^`]*)`/\1/g' pr_body_raw.txt
+          echo "after removing backticks"
+
+          echo "before reading it"
           pr_body="$(cat pr_body_raw.txt)"
+          echo "PR body: $pr_body"
+
           pr_title="${{ github.event.pull_request.title }}"
           pr_author="${{ github.event.pull_request.user.login }}"
           pr_number="${{ github.event.pull_request.number }}"
@@ -81,6 +90,8 @@ jobs:
           echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
           echo "${pr_body}" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
+          cat CHANGELOG.md
+
 
       # Commit and push the updated version and changelog
       - name: Commit and push changes
