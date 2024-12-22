@@ -69,10 +69,12 @@ jobs:
           date=$(date '+%Y-%m-%d')
 
           # Append changes to the changelog
-          echo "## [${{ env.new_version }}] - $date" >> CHANGELOG.md
-          echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
-          echo "${pr_body}" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
+          {
+            echo "## [${{ env.new_version }}] - $date"
+            echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}"
+            printf '%s\n' "${pr_body}"
+            echo ""
+          } >> CHANGELOG.md
 
       - name: Commit and push changes
         run: |
