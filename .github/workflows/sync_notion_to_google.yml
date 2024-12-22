@@ -3,24 +3,26 @@ name: Sync Notion to Google Tasks
 on:
   schedule:
     - cron: '0 8,12,16,20 * * *'
-  workflow_dispatch: # Allow manual triggers
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Environment Setup
         run: |
-          echo "Setting up environment..."
-          # Checkout code
+          echo "Setting up environment on self-hosted runner..."
+          # Ensure the working directory exists
+          mkdir -p $HOME/github-workspace
+          export GITHUB_WORKSPACE=$HOME/github-workspace
+          # Clone repository
           git clone --branch main https://github.com/${{ github.repository }} $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
           # Install Poetry
           curl -sSL https://install.python-poetry.org | python3 -
           export PATH="$HOME/.local/bin:$PATH"
-          # Install Dependencies
+          # Install dependencies
           poetry install
         env:
           PYTHON_VERSION: 3.10
@@ -57,4 +59,3 @@ jobs:
           NOTION_API: ${{ secrets.NOTION_API }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
           PROJECT_ROOT: ${{ github.workspace }}
-
