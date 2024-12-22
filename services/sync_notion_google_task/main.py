@@ -35,7 +35,12 @@ class NotionToGoogleTaskSyncer:
                 page_id = page['unique_id']
                 page_title = page['title']
                 tag = page['tags'] or "NoTag"
-                due_date = self.compute_due_date(page['due_date'])
+                due_date = page['due_date']
+
+                # Adjust the due date to today if it's too far in the future.
+                # This is a personal preference to ensure tasks are dealt with promptly.
+                recomputed_due_date = self.compute_due_date(page['due_date']) 
+                
                 importance = page['importance']
                 text = page['text']
                 urls = page['url']
@@ -69,7 +74,7 @@ class NotionToGoogleTaskSyncer:
                         tasklist_id=tasklist_id,
                         task_title=f"{page_title} - {parent_page_name} | ({page_id})",
                         task_notes=task_description,
-                        due_date=due_date
+                        due_date=recomputed_due_date
                     )
                     console.print(f"[green]Task for page '{page_title}' created successfully![/green]")
                 except Exception as e:
