@@ -13,3 +13,7 @@ This pull request includes a version update for the notion-sync project. The cha
 Changes:
 [pyproject.toml](https://github.com/MarcChen/Notion2GoogleTasks/compare/main...dev/deploy-services-to-github-action): Updated the project version from 0.1.0 to 1.0.0.
 
+## [1.0.1] - 2024-12-22
+- Merged PR #9 by @MarcChen: fix both previous workflow issue
+
+
