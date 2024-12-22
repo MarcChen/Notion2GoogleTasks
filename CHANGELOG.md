@@ -24,3 +24,10 @@ For instance, with previous PR, this was the reason it failed :
 > ### Environment Variables Cleanup:
 >   * [](diffhunk://#diff-83053cdd58e4c1fa71b292dfec284[6](https://github.com/MarcChen/Notion2GoogleTasks/actions/runs/12455742423/job/34769019982#step:6:6)007b3cbabe2c9253a530466441d9f5c2feL17-L20): Removed optional variables  and .
 
+## [1.0.3] - 2024-12-22
+- Merged PR #16 by @MarcChen: fix previous PR : worked out but removed the content of backticks 
+For instance, with previous PR, this was the reason it failed : 
+
+> ### Environment Variables Cleanup:
+>   * [](diffhunk://#diff-83053cdd58e4c1fa71b292dfec284[6](https://github.com/MarcChen/Notion2GoogleTasks/actions/runs/12455742423/job/34769019982#step:6:6)007b3cbabe2c9253a530466441d9f5c2feL17-L20): Removed optional variables  and .
+
