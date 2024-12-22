@@ -1,0 +1,60 @@
+name: Sync Notion to Google Tasks
+
+on:
+  schedule:
+    - cron: '0 8,12,16,20 * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  sync-notion:
+    name: Sync Notion to Google Tasks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Environment Setup
+        run: |
+          echo "Setting up environment..."
+          # Checkout code
+          git clone --branch main https://github.com/${{ github.repository }} $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE
+          # Install Poetry
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+          # Install Dependencies
+          poetry install
+        env:
+          PYTHON_VERSION: 3.10
+
+      - name: Validate Dependencies
+        run: |
+          echo "Validating dependencies..."
+          python --version
+          poetry --version
+          poetry check
+
+      - name: Run Unit Tests
+        run: |
+          echo "Running tests..."
+          poetry run pytest tests/unit --maxfail=1 --disable-warnings
+
+      - name: Generate Google API Token
+        run: |
+          echo "Generating token file..."
+          python $GITHUB_WORKSPACE/services/google_task/config/config_creds.py --save_dir $GITHUB_WORKSPACE
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          PROJECT_ROOT: ${{ github.workspace }}
+
+      - name: Sync Notion to Google Tasks
+        run: |
+          echo "Running sync script..."
+          export TOKEN_PATH="${{ github.workspace }}/token.json"
+          python $GITHUB_WORKSPACE/main.py
+        env:
+          NOTION_API: ${{ secrets.NOTION_API }}
+          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          PROJECT_ROOT: ${{ github.workspace }}
+
