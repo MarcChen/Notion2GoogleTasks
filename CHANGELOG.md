@@ -38,3 +38,8 @@ Still testing with the following PR body content
 > ### Environment Variables Cleanup:
 >   * [](diffhunk://#diff-83053cdd58e4c1fa71b292dfec284[6](https://github.com/MarcChen/Notion2GoogleTasks/actions/runs/12455742423/job/34769019982#step:6:6)007b3cbabe2c9253a530466441d9f5c2feL17-L20): Removed optional variables  and .
 
+## [1.0.5] - 2024-12-22
+- Merged PR #18 by @MarcChen: fix previous MR, content between backticks was removed
+> ### Environment Variables Cleanup:
+>   * [`.env_template`](diffhunk://#diff-83053cdd58e4c1fa71b292dfec284[6](https://github.com/MarcChen/Notion2GoogleTasks/actions/runs/12455742423/job/34769019982#step:6:6)007b3cbabe2c9253a530466441d9f5c2feL17-L20): Removed optional variables `FREE_MOBILE_PASS` and `FREE_MOBILE_USER`.
+
