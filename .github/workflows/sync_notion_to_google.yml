@@ -30,7 +30,7 @@ jobs:
       - name: Validate Dependencies
         run: |
           echo "Validating dependencies..."
-          python --version
+          python3 --version
           poetry --version
           poetry check
 
@@ -42,7 +42,7 @@ jobs:
       - name: Generate Google API Token
         run: |
           echo "Generating token file..."
-          poetry run python $GITHUB_WORKSPACE/services/google_task/config/config_creds.py --save_dir $GITHUB_WORKSPACE
+          poetry run python3 $GITHUB_WORKSPACE/services/google_task/config/config_creds.py --save_dir $GITHUB_WORKSPACE
         env:
           GOOGLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "Running sync script..."
           export TOKEN_PATH="${{ github.workspace }}/token.json"
-          poetry run python $GITHUB_WORKSPACE/main.py
+          poetry run python3 $GITHUB_WORKSPACE/main.py
         env:
           NOTION_API: ${{ secrets.NOTION_API }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
