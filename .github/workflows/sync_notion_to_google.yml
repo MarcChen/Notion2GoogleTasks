@@ -3,10 +3,6 @@ name: Sync Notion to Google Tasks
 on:
   schedule:
     - cron: '0 8,12,16,20 * * *'
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
   sync-notion:
