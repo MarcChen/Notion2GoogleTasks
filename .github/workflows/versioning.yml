@@ -60,21 +60,23 @@ jobs:
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "${new_version}" > VERSION
 
-      - name: Update Changelog
-        run: |
-          pr_title="${{ github.event.pull_request.title }}"
-          pr_body="${{ github.event.pull_request.body }}"
-          pr_author="${{ github.event.pull_request.user.login }}"
-          pr_number="${{ github.event.pull_request.number }}"
-          date=$(date '+%Y-%m-%d')
-
-          # Append changes to the changelog
-          {
-            echo "## [${{ env.new_version }}] - $date"
-            echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}"
-            printf '%s\n' "${pr_body}"
-            echo ""
-          } >> CHANGELOG.md
+          - name: Update Changelog
+          run: |
+            pr_title="${{ github.event.pull_request.title }}"
+            # Escape any double-quotes in the PR body
+            pr_body="$(echo "${{ github.event.pull_request.body }}" | sed 's/"/\\"/g')"
+            pr_author="${{ github.event.pull_request.user.login }}"
+            pr_number="${{ github.event.pull_request.number }}"
+            date=$(date '+%Y-%m-%d')
+        
+            echo "## [${{ env.new_version }}] - $date" >> CHANGELOG.md
+            echo "- Merged PR #${pr_number} by @${pr_author}: ${pr_title}" >> CHANGELOG.md
+        
+            # Use printf to safely handle newlines and special characters
+            printf '%s\n' "${pr_body}" >> CHANGELOG.md
+        
+            echo "" >> CHANGELOG.md
+        
 
       - name: Commit and push changes
         run: |
