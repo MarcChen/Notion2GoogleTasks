@@ -2,11 +2,11 @@ name: Versioning and Changelog Update
 
 on:
   pull_request:
-    types: [closed] # Triggered when a PR is closed (merged)
+    types: [closed]
 
 jobs:
   bump-version-and-update-changelog:
-    if: github.event.pull_request.merged == true # Only proceed if the PR was merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -68,9 +68,10 @@ jobs:
       - name: Update Changelog
         run: |
           set -e
-          echo "${{ github.event.pull_request.body }}" > pr_body_raw.txt
-          perl -0777 -pe 's/```(.*?)```/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
-          perl -0777 -pe 's/`(.*?)`/$1/gs' pr_body_raw.txt > tmp && mv tmp pr_body_raw.txt
+          cat << 'EOF' > pr_body_raw.txt
+          ${{ github.event.pull_request.body }}
+          EOF
+          sed -E 's/`([^`]*)`/\1/g' pr_body_raw.txt
           pr_body="$(cat pr_body_raw.txt)"
           pr_title="${{ github.event.pull_request.title }}"
           pr_author="${{ github.event.pull_request.user.login }}"
