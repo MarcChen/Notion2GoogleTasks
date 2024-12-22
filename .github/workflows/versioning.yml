@@ -69,7 +69,8 @@ jobs:
         run: |
           set -e
           echo "${{ github.event.pull_request.body }}" > pr_body_raw.txt
-          sed -i 's/`//g' pr_body_raw.txt
+          sed -E -i 's/```([^`]+)```/\1/g' pr_body_raw.txt
+          sed -E -i 's/`([^`]+)`/\1/g' pr_body_raw.txt
           pr_body="$(cat pr_body_raw.txt)"
 
           pr_title="${{ github.event.pull_request.title }}"
