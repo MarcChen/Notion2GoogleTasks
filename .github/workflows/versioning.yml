@@ -25,7 +25,7 @@ jobs:
       - name: Determine bump type from labels
         id: determine_version
         run: |
-          labels=$(echo "${{ github.event.pull_request.labels }}" | jq -r '.[].name')
+          labels=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
           if echo "$labels" | grep -q "major"; then
             echo "bump_type=major" >> $GITHUB_ENV
           elif echo "$labels" | grep -q "minor"; then
