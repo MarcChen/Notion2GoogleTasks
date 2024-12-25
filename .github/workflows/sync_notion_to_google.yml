@@ -107,3 +107,5 @@ jobs:
           NOTION_API: ${{ secrets.NOTION_API }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
           PROJECT_ROOT: ${{ github.workspace }}
+          FREE_MOBILE_USER_ID: ${{ secrets.FREE_MOBILE_USER_ID }}
+          FREE_MOBILE_API_KEY: ${{ secrets.FREE_MOBILE_API_KEY }}

@@ -7,11 +7,13 @@ from rich.console import Console
 from rich.live import Live
 from services.notion.src.notion_client import NotionClient
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from services.free_sms_alert.main import SMSAPI
 
 class NotionToGoogleTaskSyncer:
-    def __init__(self, notion_api_key: str, database_id: str, project_root: str, token_path: str):
+    def __init__(self, notion_api_key: str, database_id: str, project_root: str, token_path: str, sms_user: str, sms_password: str):
         self.notion_client = NotionClient(notion_api_key, database_id, project_root)
         self.google_tasks_manager = GoogleTasksManager(token_path)
+        self.sms_altert = SMSAPI(sms_user, sms_password)
 
     def sync_pages_to_google_tasks(self):
         """
@@ -59,6 +61,7 @@ class NotionToGoogleTaskSyncer:
                 except Exception as e:
                     console.print(f"[red]Error ensuring task list for tag '{tag}': {e}[/red]")
                     progress.advance(task)
+                    self.sms_altert.send_sms(f"Error ensuring task list for tag '{tag}': {e}")
                     continue
 
                 try:
@@ -67,6 +70,7 @@ class NotionToGoogleTaskSyncer:
                 except Exception as e:
                     console.print(f"[red]Error building task description: {e}[/red]")
                     progress.advance(task)
+                    self.sms_altert.send_sms(f"Error building task description: {e}")
                     continue
 
                 try:
@@ -79,6 +83,7 @@ class NotionToGoogleTaskSyncer:
                     console.print(f"[green]Task for page '{page_title}' created successfully![/green]")
                 except Exception as e:
                     console.print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
+                    self.sms_altert.send_sms(f"Error creating task for page '{page_title}': {e}")
 
                 progress.advance(task)
 

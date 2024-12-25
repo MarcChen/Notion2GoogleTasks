@@ -12,7 +12,14 @@ def mock_syncer():
         mock_google_tasks_manager = MockGoogleTasksManager.return_value
         
         # Return the class under test with mocked dependencies
-        syncer = NotionToGoogleTaskSyncer("mock_notion_api_key", "mock_database_id", "mock_project_root", "mock_token_path")
+        syncer = NotionToGoogleTaskSyncer(
+            "mock_notion_api_key", 
+            "mock_database_id", 
+            "mock_project_root", 
+            "mock_token_path",
+            "mock_sms_user", 
+            "mock_sms_password"
+        )
         return syncer, mock_notion_client, mock_google_tasks_manager
 
 def test_build_task_description(mock_syncer):
