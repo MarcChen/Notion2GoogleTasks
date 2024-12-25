@@ -22,7 +22,7 @@ def test_build_task_description(mock_syncer):
     importance = "High"
     text = "Complete the report"
     urls = ["http://example.com", "http://example.org"]
-    due_date = datetime.utcnow()
+    due_date = (datetime.utcnow() + timedelta(days=7)).isoformat()  # Adjusted to a string type
     
     description = syncer.build_task_description(importance, text, urls, due_date)
     
@@ -31,7 +31,7 @@ def test_build_task_description(mock_syncer):
     assert "Links:" in description
     assert " - http://example.com" in description
     assert " - http://example.org" in description
-    assert f"Due Date: {due_date.strftime('%d-%m-%y')}" in description
+    assert f"Due Date: {datetime.fromisoformat(due_date).strftime('%d-%m-%y')}" in description
 
     # Test case: Missing fields
     description = syncer.build_task_description(None, None, None, None)
@@ -50,11 +50,11 @@ def test_build_task_description(mock_syncer):
 
 def test_compute_due_date(mock_syncer):
     syncer, _, _ = mock_syncer
-    
+
     # Test case: due_date is None
     due_date = syncer.compute_due_date(None)
     assert due_date.date() == datetime.utcnow().date()
-    
+
     # Test case: due_date exceeds 14 days
     future_date = (datetime.utcnow() + timedelta(days=20)).isoformat()
     adjusted_date = syncer.compute_due_date(future_date)

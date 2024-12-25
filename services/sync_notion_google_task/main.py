@@ -118,7 +118,7 @@ class NotionToGoogleTaskSyncer:
 
         return google_task_lists[tag]
 
-    def build_task_description(self, importance: Optional[str], text: Optional[str], urls: Optional[List[str]], due_date: Optional[datetime]) -> str:
+    def build_task_description(self, importance: Optional[str], text: Optional[str], urls: Optional[List[str]], due_date: Optional[str]) -> str:
         """
         Builds a task description from the given properties.
 
@@ -141,6 +141,7 @@ class NotionToGoogleTaskSyncer:
             for url in urls:
                 description_lines.append(f" - {url}")
         if due_date:
+            due_date = datetime.fromisoformat(due_date)
             description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
         return "\n".join(description_lines)
 
