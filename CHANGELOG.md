@@ -78,3 +78,27 @@ Updates to unit tests:
 
 * [`tests/unit/test_notion_to_google_syncer.py`](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL25-R25): Adjusted the `due_date` parameter to be a string in the `test_build_task_description` method and updated assertions to reflect this change. [[1]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL25-R25) [[2]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL34-R34)
 
+## [1.1.0] - 2024-12-25
+- Merged PR #21 by @MarcChen: Feat : adding freemobile sms alert
+When syncing Notion and Google Tasks, the system already ensures resilience by continuing the sync process even if one page fails to sync. However, the issue was that I wasn’t informed of these failures since the GitHub Action didn’t fail. To address this, I’ve added a feature that sends an alert via my mobile provider's API whenever a sync failure occurs, ensuring I stay informed while maintaining system resilience.
+
+---
+This pull request introduces SMS alert functionality for error notifications in the Notion to Google Tasks synchronization process. The most important changes include adding new environment variables, updating the sync process to send SMS alerts, and implementing and testing the SMS API client.
+
+### SMS Alert Functionality:
+
+* [`.env_template`](diffhunk://#diff-83053cdd58e4c1fa71b292dfec2846007b3cbabe2c9253a530466441d9f5c2feR17-R21): Added `FREE_MOBILE_USER_ID` and `FREE_MOBILE_API_KEY` as optional environment variables for SMS alerts.
+* [`.github/workflows/sync_notion_to_google.yml`](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9R110-R111): Updated the GitHub Actions workflow to include the new SMS alert environment variables.
+* [`main.py`](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R9-R19): Added retrieval and assertion of the new SMS alert environment variables.
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R10-R16): Integrated `SMSAPI` into the `NotionToGoogleTaskSyncer` class to send SMS alerts on errors during the sync process. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R10-R16) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R64) [[3]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R73) [[4]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R86)
+
+### SMS API Client Implementation:
+
+* [`services/free_sms_alert/main.py`](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dR1-R97): Implemented the `SMSAPI` class to handle sending SMS messages, including error handling for various HTTP response codes.
+
+### Testing:
+
+* [`tests/README.md`](diffhunk://#diff-dacac2ebf9792f0d23c0f922a744486ded01901957d5281290925acd89cf83acL27-R81): Updated the README to include new unit and integration tests for the SMS alert functionality.
+* [`tests/integration/test_alert_sms_integration.py`](diffhunk://#diff-7b32783bf259b4204713152d6fcb341669a00c5325bc87669c5512f4572ecf6aR1-R25): Added integration tests for the `SMSAPI` class to verify SMS sending with real credentials.
+* [`tests/unit/test_alert_sms_free.py`](diffhunk://#diff-5d0b4faa3e361bb96379e32c6bcac20ac1ef80c67a6fdb3b03f3804e0bb1971cR1-R35): Added unit tests for the `SMSAPI` class to test successful SMS sending and error handling.
+
