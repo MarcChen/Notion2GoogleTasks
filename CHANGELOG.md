@@ -60,3 +60,21 @@ This pull request includes several changes to the `sync_notion_google_task` serv
 
 * Improved the validation logic in the integration test to fetch and parse Notion pages and validate synchronization with Google Tasks. (`tests/integration/test_notion_to_google_syncer_integration.py`)
 
+## [1.0.7] - 2024-12-25
+- Merged PR #20 by @MarcChen: fix : patch due_date type error
+Patch to fix this issue : 
+
+> Processing Page: licence FFA 2024/2025 ou ton attestation PPS - SEMI  (ID: 597)
+>   Task List ID for tag 'Travail': c0RkZFdiSm9NQnJ0c2d0aA
+> Error building task description: 'str' object has no attribute 'strftime'
+
+This pull request includes changes to the `services/sync_notion_google_task` service and its corresponding unit tests to handle due dates as strings instead of `datetime` objects. The most important changes are the modification of the `build_task_description` method and the corresponding updates to the unit tests.
+
+Changes to due date handling:
+
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L121-R121): Modified the `build_task_description` method to accept `due_date` as a string and convert it to a `datetime` object within the method. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L121-R121) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R144)
+
+Updates to unit tests:
+
+* [`tests/unit/test_notion_to_google_syncer.py`](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL25-R25): Adjusted the `due_date` parameter to be a string in the `test_build_task_description` method and updated assertions to reflect this change. [[1]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL25-R25) [[2]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL34-R34)
+
