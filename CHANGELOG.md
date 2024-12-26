@@ -102,3 +102,25 @@ This pull request introduces SMS alert functionality for error notifications in 
 * [`tests/integration/test_alert_sms_integration.py`](diffhunk://#diff-7b32783bf259b4204713152d6fcb341669a00c5325bc87669c5512f4572ecf6aR1-R25): Added integration tests for the `SMSAPI` class to verify SMS sending with real credentials.
 * [`tests/unit/test_alert_sms_free.py`](diffhunk://#diff-5d0b4faa3e361bb96379e32c6bcac20ac1ef80c67a6fdb3b03f3804e0bb1971cR1-R35): Added unit tests for the `SMSAPI` class to test successful SMS sending and error handling.
 
+## [1.1.1] - 2024-12-26
+- Merged PR #22 by @MarcChen: Fix/workflow on new machine
+This pull request addresses issues with the `.github/workflows/sync_notion_to_google.yml` file, specifically to ensure the workflow functions correctly even if the runner is not pre-configured. Previously, the workflow failed when the environment was not fully set up from scratch. These changes aim to improve reliability and usability.
+
+---
+
+### Workflow improvements:
+
+- **Branch condition**: Added a condition to execute the workflow only on the `main` branch. (`.github/workflows/sync_notion_to_google.yml`)
+
+### Python installation process:
+
+- **Updated method**: Updated the installation process for Python 3.10 to use the `deadsnakes` PPA and ensured the PATH is correctly set. (`.github/workflows/sync_notion_to_google.yml`)
+
+### Poetry installation process:
+
+- **PATH export**: Added a step to export Poetry's bin directory to PATH for the current session and ensured the PATH is correctly set. (`.github/workflows/sync_notion_to_google.yml`)
+
+### Error messaging:
+
+- **Improved checks**: Enhanced error messages for Python 3.10 and Poetry installation steps to provide better clarity. (`.github/workflows/sync_notion_to_google.yml`)
+
