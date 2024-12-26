@@ -1,13 +1,15 @@
 name: Sync Notion to Google Tasks
 
 on:
-  pull_request:
-    types: [labeled, unlabeled, opened, edited, synchronize, closed]
+  schedule:
+    - cron: '0 8,12,16,20 * * *'
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
     runs-on: self-hosted
+
+    if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
     steps:
       - name: Checkout Repository
