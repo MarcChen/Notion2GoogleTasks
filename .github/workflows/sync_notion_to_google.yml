@@ -22,15 +22,17 @@ jobs:
           else
             echo "Python 3.10 not found. Installing..."
             sudo apt-get update
-            sudo apt-get install -y python3.10 python3.10-venv
+            sudo apt-get install -y software-properties-common
+            sudo add-apt-repository -y ppa:deadsnakes/ppa
+            sudo apt-get update
+            sudo apt-get install -y python3.10
           fi
 
-          # Regardless of whether it was installed or pre-existing, 
-          # append the python3.10 directory to GITHUB_PATH.
+          # Ensure Python 3.10 is available in PATH
           if command -v python3.10 &>/dev/null; then
             echo "$(dirname "$(command -v python3.10)")" >> $GITHUB_PATH
           else
-            echo "ERROR: python3.10 not found even after installation."
+            echo "ERROR: Python 3.10 installation failed."
             exit 1
           fi
 
@@ -45,12 +47,11 @@ jobs:
             curl -sSL https://install.python-poetry.org | python3.10 -
           fi
 
-          # Poetry typically installs to ~/.local/bin. 
-          # We'll also add the directory containing the poetry executable itself.
+          # Ensure Poetry is available in PATH
           if command -v poetry &>/dev/null; then
             echo "$(dirname "$(command -v poetry)")" >> $GITHUB_PATH
           else
-            echo "ERROR: Poetry not found in PATH after installation."
+            echo "ERROR: Poetry not found after installation."
             exit 1
           fi
 
@@ -59,7 +60,7 @@ jobs:
         shell: bash
         run: |
           echo "=== Checking Python 3.10 ==="
-          command -v python3.10 || { echo "python3.10 not found"; exit 1; }
+          command -v python3.10 || { echo "Python 3.10 not found"; exit 1; }
           python3.10 --version
 
           echo "=== Checking Poetry ==="
