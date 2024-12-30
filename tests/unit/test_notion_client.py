@@ -61,12 +61,13 @@ class TestNotionClient:
         assert parent_names["parent_1"] == "Parent Page"
 
     @patch("requests.patch")
-    def test_mark_page_as_completed(self, mock_patch, notion_client):
+    @patch.object(NotionClient, 'get_filtered_sorted_database', return_value=MOCK_NOTION_RESPONSE)
+    def test_mark_page_as_completed(self, mock_get_filtered_sorted_database, mock_patch, notion_client):
         """Test mark_page_as_completed method."""
         mock_patch.return_value.status_code = 200
         mock_patch.return_value.json.return_value = {"status": "success"}
 
-        response = notion_client.mark_page_as_completed("page_1")
+        response = notion_client.mark_page_as_completed(123)  # Updated to use task_id
         assert response is not None
         assert response["status"] == "success"
 

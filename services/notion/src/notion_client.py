@@ -79,16 +79,35 @@ class NotionClient:
 
         return parent_page_names
 
-    def mark_page_as_completed(self, page_id: str) -> Optional[Dict]:
+    def mark_page_as_completed(self, task_id: int) -> Optional[Dict]:
         """
-        Marks the 'Status' property of a Notion page as 'Done'.
+        Marks the 'Status' property of a Notion page as 'Done' based on the task ID.
 
         Args:
-            page_id (str): The ID of the Notion page to update.
+            task_id (int): The unique task ID to update.
 
         Returns:
             Optional[Dict]: The JSON response from the Notion API if successful; None otherwise.
         """
+        # Fetch the database to find the page ID corresponding to the task ID
+        database_response = self.get_filtered_sorted_database()
+        if not database_response:
+            print(f"Failed to fetch database to find task ID {task_id}")
+            return None
+
+        page_id = None
+        for page in database_response.get('results', []):
+            properties = page.get('properties', {})
+            unique_id = properties.get('ID', {}).get('unique_id', {}).get('number', None)
+            if unique_id == task_id:
+                page_id = page.get('id', None)
+                break
+
+        if not page_id:
+            print(f"Task ID {task_id} not found in the database.")
+            return None
+
+        # Update the page status to 'Done'
         url = f"https://api.notion.com/v1/pages/{page_id}"
         payload = {
             "properties": {
@@ -103,14 +122,14 @@ class NotionClient:
         try:
             response = requests.patch(url, headers=self.headers, json=payload)
             if response.status_code == 200:
-                print(f"Page {page_id} marked as 'Done' successfully!")
+                print(f"Task {task_id} marked as 'Done' successfully!")
                 return response.json()
             else:
-                print(f"Failed to mark page {page_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}")
+                print(f"Failed to mark task {task_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}")
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Error marking page {page_id} as 'Done': {e}")
+            print(f"Error marking task {task_id} as 'Done': {e}")
             return None
 
     def create_new_page(self, title: str) -> Optional[Dict]:
