@@ -15,6 +15,8 @@ class NotionToGoogleTaskSyncer:
         self.google_tasks_manager = GoogleTasksManager(token_path)
         self.sms_altert = SMSAPI(sms_user, sms_password)
 
+    ### Method to sync Notion pages to Google Tasks ###
+
     def sync_pages_to_google_tasks(self):
         """
         Synchronizes Notion pages to Google Tasks with a progress bar that remains at the top.
@@ -172,3 +174,39 @@ class NotionToGoogleTaskSyncer:
             due_date = today
 
         return due_date
+    
+    ### Method to sync completed Google Tasks to Notion ###
+
+    def sync_google_tasks_to_notion(self, last_successful_sync: datetime):
+        """
+        Synchronizes completed Google Tasks to Notion, marking them as done.
+
+        Args:
+            last_successful_sync (datetime): The datetime of the last successful sync.
+        """
+        google_task_lists = self.google_tasks_manager.list_task_lists()
+        completed_tasks = self.google_tasks_manager.get_completed_tasks_since(last_successful_sync)
+
+        for task in completed_tasks:
+            page_id = self.extract_page_id_from_task_title(task['title'])
+            if page_id:
+                try:
+                    self.notion_client.mark_page_as_completed(page_id)
+                    print(f"[green]Marked Notion page '{page_id}' as done based on Google Task '{task['title']}'[/green]")
+                except Exception as e:
+                    print(f"[red]Error marking Notion page '{page_id}' as done: {e}[/red]")
+                    self.sms_altert.send_sms(f"Error marking Notion page '{page_id}' as done: {e}")
+                        
+    def extract_page_id_from_task_title(self, task_title: str) -> Optional[str]:
+        """
+        Extracts the Notion page ID from the Google Task title.
+
+        Args:
+            task_title (str): The title of the Google Task.
+
+        Returns:
+            Optional[str]: The extracted Notion page ID, or None if not found.
+        """
+        if '(' in task_title and task_title.endswith(')'):
+            return task_title.split('(')[-1].rstrip(')')
+        return None

@@ -4,6 +4,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from services.google_task.src.authentification import load_credentials, refresh_access_token, print_token_ttl
 from datetime import datetime
+import time
 
 class GoogleTasksManager:
     """
@@ -211,3 +212,33 @@ class GoogleTasksManager:
             ).execute()
         except Exception as e:
             raise Exception(f"Error creating subtask: {e}")
+
+    def get_completed_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
+        """
+        Retrieves tasks that have been completed since the last check.
+
+        Args:
+            tasklist_id (str): ID of the task list.
+            last_checked (datetime): The timestamp of the last check.
+
+        Returns:
+            dict: A dictionary with task titles as keys and task details as values.
+        """
+        try:
+            tasks = self.service.tasks().list(
+                tasklist=tasklist_id,
+                showCompleted=True,
+                showHidden=True,
+                updatedMin=last_checked.isoformat() + 'Z'
+            ).execute()
+            return {
+                task.get('title', 'No Title'): {
+                    "id": task['id'],
+                    "status": task.get('status'),
+                    "completed": task.get('completed'),
+                    "updated": task.get('updated'),
+                }
+                for task in tasks.get('items', []) if task.get('status') == 'completed'
+            }
+        except Exception as e:
+            raise Exception(f"Error retrieving completed tasks: {e}")
