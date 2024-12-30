@@ -27,3 +27,6 @@ TO-DO
     - created_tasks_since
     - modify_task_title
     - get_completed_tasks_since
+
+- Delete TO-DO 
+- Delete temp.sh -> include it to workflow CI
