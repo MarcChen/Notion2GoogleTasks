@@ -20,3 +20,10 @@ TO-DO
 - Creating a new task will create a page on Notion
 - PAT For private repositories: ACCESS : repo / workflow   
     - In order to retrieve last succesfull run
+
+
+- Units test 
+    - create_new_page
+    - created_tasks_since
+    - modify_task_title
+    - get_completed_tasks_since

@@ -104,7 +104,7 @@ class NotionClient:
                 break
 
         if not page_id:
-            print(f"Task ID {task_id} not found in the database.")
+            print(f"Task ID {task_id} either already marked as Done or not found in the database.")
             return None
 
         # Update the page status to 'Done'
@@ -132,7 +132,7 @@ class NotionClient:
             print(f"Error marking task {task_id} as 'Done': {e}")
             return None
 
-    def create_new_page(self, title: str) -> Optional[Dict]:
+    def create_new_page(self, title: str) -> Optional[str]:
         """
         Create a new page in the Notion database with the "Today" checkbox set to True.
 
@@ -140,7 +140,7 @@ class NotionClient:
             title (str): The title of the new page.
 
         Returns:
-            Optional[Dict]: The JSON response from the Notion API if successful; None otherwise.
+            Optional[str]: The ID of the newly created page if successful; None otherwise.
         """
         url = "https://api.notion.com/v1/pages"
         payload = {
@@ -161,7 +161,7 @@ class NotionClient:
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             print(f"Page '{title}' created successfully with 'Today' checkbox set to True!")
-            return response.json()
+            return response.json().get('properties', {}).get('ID', {}).get('unique_id', {}).get('number', None)
 
         except requests.exceptions.RequestException as e:
             print(f"Error creating page '{title}': {e}")

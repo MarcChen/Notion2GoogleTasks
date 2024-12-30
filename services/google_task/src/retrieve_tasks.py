@@ -242,3 +242,52 @@ class GoogleTasksManager:
             }
         except Exception as e:
             raise Exception(f"Error retrieving completed tasks: {e}")
+
+    def created_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
+        """
+        Retrieves tasks that have been created since the last check.
+
+        Args:
+            tasklist_id (str): ID of the task list.
+            last_checked (datetime): The timestamp of the last check.
+
+        Returns:
+            dict: A dictionary with task titles as keys and task details as values.
+        """
+        try:
+            tasks = self.service.tasks().list(
+                tasklist=tasklist_id,
+                showCompleted=True,
+                showHidden=True,
+                updatedMin=last_checked.isoformat() + 'Z'
+            ).execute()
+            return {
+                task.get('title', 'No Title'): {
+                    "id": task['id'],
+                    "status": task.get('status'),
+                    "completed": task.get('completed'),
+                    "updated": task.get('updated'),
+                }
+                for task in tasks.get('items', []) if task.get('status') == 'needsAction'
+            }
+        except Exception as e:
+            raise Exception(f"Error retrieving created tasks: {e}")
+        
+    def modify_task_title(self, tasklist_id: str, task_id: str, new_title: str) -> Dict[str, Any]:
+        """
+        Modifies the title of a specific task.
+
+        Args:
+            tasklist_id (str): ID of the task list.
+            task_id (str): ID of the task.
+            new_title (str): New title for the task.
+
+        Returns:
+            dict: Details of the updated task.
+        """
+        try:
+            return self.service.tasks().patch(
+                tasklist=tasklist_id, task=task_id, body={"title": new_title}
+            ).execute()
+        except Exception as e:
+            raise Exception(f"Error modifying task title: {e}")
