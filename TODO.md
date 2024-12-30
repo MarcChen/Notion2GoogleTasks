@@ -18,3 +18,5 @@ TO-DO
     - otherwise mark the page on notion as done 
     - 
 - Creating a new task will create a page on Notion
+- PAT For private repositories: ACCESS : repo / workflow   
+    - In order to retrieve last succesfull run
