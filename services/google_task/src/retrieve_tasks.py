@@ -243,7 +243,7 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error retrieving completed tasks: {e}")
 
-    def created_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
+    def get_created_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
         """
         Retrieves tasks that have been created since the last check.
 

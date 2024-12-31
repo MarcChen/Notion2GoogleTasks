@@ -201,7 +201,7 @@ class NotionToGoogleTaskSyncer:
                         self.sms_altert.send_sms(f"Error marking Notion page '{page_id}' as done: {e}")
 
             # Sync created task from google Task to Notion
-            created_tasks_since_last_run = self.google_tasks_manager.created_tasks_since(tasklist, last_successful_sync)
+            created_tasks_since_last_run = self.google_tasks_manager.get_created_tasks_since(tasklist, last_successful_sync)
 
             if created_tasks_since_last_run is not None:
                 for task_title, task_details in created_tasks_since_last_run.items():

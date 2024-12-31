@@ -39,7 +39,7 @@ if __name__ == "__main__":
     
     # Get completed tasks since last check
     # completed_tasks = manager.get_completed_tasks_since(tasklist_id, last_time)
-    created_tasks = manager.created_tasks_since(tasklist_id, last_time)
+    created_tasks = manager.get_created_tasks_since(tasklist_id, last_time)
     print(f"Created tasks: {created_tasks}")
     # Access the ID of the created task
     for task_title, task_details in created_tasks.items():
