@@ -23,7 +23,7 @@ class NotionClient:
             "Notion-Version": "2022-06-28"
         }
 
-    def get_filtered_sorted_database(self) -> Optional[Dict]:
+    def get_filtered_sorted_database(self, query_page_ids : List[int] = [-1]) -> Optional[Dict]:
         """
         Fetches the database information from Notion with specified filters and sorting.
 
@@ -33,8 +33,22 @@ class NotionClient:
         url = f"https://api.notion.com/v1/databases/{self.database_id}/query"
         
         try:
-            with open(f"{self.project_root}/services/notion/config/query_payload.json", 'r') as file: 
-                query_payload = json.load(file)
+            if query_page_ids == [-1]:
+                with open(f"{self.project_root}/services/notion/config/query_payload.json", 'r') as file: 
+                    query_payload = json.load(file)
+            else : 
+                query_payload = {
+                    "filter": {
+                        "or": [
+                            {
+                                "property": "ID",
+                                "unique_id": {
+                                    "equals": page_id
+                                }
+                            } for page_id in query_page_ids
+                        ]
+                    }
+                }
 
             response = requests.post(url, headers=self.headers, json=query_payload)
             response.raise_for_status()
@@ -167,6 +181,33 @@ class NotionClient:
             print(f"Error creating page '{title}': {e}")
             return None
 
+    def retrieve_pages_status(self, tasks_id : List[int]) -> List[Dict]:
+        """
+        Retrieve the status of multiple pages based on their task IDs.
+
+        Args:
+            tasks_id (List[int]): A list of task IDs to retrieve status for.
+
+        Returns:
+            List[Dict]: A list of dictionaries containing the task ID and status of each page.
+        """
+        database_response = self.get_filtered_sorted_database(query_page_ids=tasks_id)
+        if not database_response:
+            print("Failed to fetch database to retrieve pages status.")
+            return []
+        
+        parsed_data = self.parse_notion_response(database_response)
+        tasks_status = []
+        for page in parsed_data:
+            if int(page['unique_id']) in tasks_id:
+                tasks_status.append({
+                    "task_id": page['unique_id'],
+                    "title": page['title'],
+                    "page_status": page['page_status']
+                })
+        return tasks_status
+        
+
     def parse_notion_response(self, response: Dict) -> List[Dict]:
         """
         Parse the Notion response to extract relevant fields, including parent page names.
@@ -227,10 +268,14 @@ class NotionClient:
                 else:
                     parent_page_id = None
 
+                status_property = properties.get('Status', {}).get('status', None)
+                status = status_property.get('name', None) if status_property else None
+
                 parsed_data.append({
                     "unique_id": unique_id,
                     "page_id": page_id,
                     "title": title_text,
+                    "page_status": status,
                     "created_time": created_time,
                     "last_edited_time": laste_edited_time,
                     "estimates": estimates,
