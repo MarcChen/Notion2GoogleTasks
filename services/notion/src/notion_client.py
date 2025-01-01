@@ -26,7 +26,9 @@ class NotionClient:
     def get_filtered_sorted_database(self, query_page_ids : List[int] = [-1]) -> Optional[Dict]:
         """
         Fetches the database information from Notion with specified filters and sorting.
-
+        Args:
+            query_page_ids (List[int], optional): A list of page IDs to filter the database query. 
+                                                  Defaults to [-1], which loads the default query payload from a JSON file.
         Returns:
             Optional[Dict]: The JSON response from the Notion API if the request is successful; None otherwise.
         """
@@ -55,10 +57,10 @@ class NotionClient:
             return response.json()
 
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching database: {e}")
+            print(f"[red]Error fetching database: {e}[/red]")
             return None
         except FileNotFoundError as e:
-            print(f"Error loading query payload: {e}")
+            print(f"[red]Error loading query payload: {e}[/red]")
             return None
 
     def fetch_parent_page_names(self, parent_page_ids: Set[str]) -> Dict[str, Optional[str]]:
@@ -88,7 +90,7 @@ class NotionClient:
                     parent_page_names[page_id] = None
 
             except requests.exceptions.RequestException as e:
-                print(f"Error fetching parent page {page_id}: {e}")
+                print(f"[red]Error fetching parent page {page_id}: {e}[/red]")
                 parent_page_names[page_id] = None
 
         return parent_page_names
@@ -103,23 +105,24 @@ class NotionClient:
         Returns:
             Optional[Dict]: The JSON response from the Notion API if successful; None otherwise.
         """
-        # Fetch the database to find the page ID corresponding to the task ID
-        database_response = self.get_filtered_sorted_database()
+        # Fetch the database to find the unique page ID corresponding to the task ID 
+        # In notion DB, there's 2 UID, one is the page ID (necessary for API call) and the other is the task ID
+        
+        database_response = self.get_filtered_sorted_database(query_page_ids=[task_id])
         if not database_response:
-            print(f"Failed to fetch database to find task ID {task_id}")
+            print(f"[red]Failed to fetch database to find task ID {task_id}[/red]")
             return None
 
-        page_id = None
-        for page in database_response.get('results', []):
-            properties = page.get('properties', {})
-            unique_id = properties.get('ID', {}).get('unique_id', {}).get('number', None)
-            if unique_id == task_id:
-                page_id = page.get('id', None)
-                break
-
-        if not page_id:
-            print(f"Task ID {task_id} either already marked as Done or not found in the database.")
+        parsed_data = self.parse_notion_response(database_response)
+        page_status = parsed_data[0].get('page_status', None)
+        if page_status == "Done":
+            print(f"[orange1]Task {task_id} is already marked as 'Done'[/orange1]")
             return None
+
+        page_id = parsed_data[0].get('page_id', None)
+        if page_id is None:
+            print(f"[red]Failed to find page ID for task ID {task_id}[/red]")
+            raise Exception(f"Failed to find page ID for task ID {task_id}")
 
         # Update the page status to 'Done'
         url = f"https://api.notion.com/v1/pages/{page_id}"
@@ -136,14 +139,14 @@ class NotionClient:
         try:
             response = requests.patch(url, headers=self.headers, json=payload)
             if response.status_code == 200:
-                print(f"Task {task_id} marked as 'Done' successfully!")
+                print(f"[green]Task {task_id} marked as 'Done' successfully![/green]")
                 return response.json()
             else:
-                print(f"Failed to mark task {task_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}")
+                print(f"[red]Failed to mark task {task_id} as 'Done'. Status Code: {response.status_code}. Error: {response.text}[/red]")
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Error marking task {task_id} as 'Done': {e}")
+            print(f"[red]Error marking task {task_id} as 'Done': {e}[/red]")
             return None
 
     def create_new_page(self, title: str) -> Optional[str]:
@@ -174,11 +177,11 @@ class NotionClient:
         try:
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
-            print(f"Page '{title}' created successfully with 'Today' checkbox set to True!")
+            print(f"[green]Page '{title}' created successfully with 'Today' checkbox set to True![/green]")
             return response.json().get('properties', {}).get('ID', {}).get('unique_id', {}).get('number', None)
 
         except requests.exceptions.RequestException as e:
-            print(f"Error creating page '{title}': {e}")
+            print(f"[red]Error creating page '{title}': {e}[/red]")
             return None
 
     def retrieve_pages_status(self, tasks_id : List[int]) -> List[Dict]:
@@ -193,7 +196,7 @@ class NotionClient:
         """
         database_response = self.get_filtered_sorted_database(query_page_ids=tasks_id)
         if not database_response:
-            print("Failed to fetch database to retrieve pages status.")
+            print("[red]Failed to fetch database to retrieve pages status.[/red]")
             return []
         
         parsed_data = self.parse_notion_response(database_response)
@@ -270,10 +273,13 @@ class NotionClient:
 
                 status_property = properties.get('Status', {}).get('status', None)
                 status = status_property.get('name', None) if status_property else None
+                
+                task_id = properties.get('ID', {}).get('unique_id', {}).get('number', None)
 
                 parsed_data.append({
                     "unique_id": unique_id,
                     "page_id": page_id,
+                    "task_id": task_id,
                     "title": title_text,
                     "page_status": status,
                     "created_time": created_time,
