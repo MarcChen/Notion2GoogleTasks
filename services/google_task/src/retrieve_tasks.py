@@ -291,3 +291,17 @@ class GoogleTasksManager:
             ).execute()
         except Exception as e:
             raise Exception(f"Error modifying task title: {e}")
+    
+    def extract_task_id_from_task_title(self, task_title: str) -> Optional[int]:
+        """
+        Extracts the Notion page ID from the Google Task title.
+
+        Args:
+            task_title (str): The title of the Google Task.
+
+        Returns:
+            Optional[str]: The extracted Notion page ID, or None if not found.
+        """
+        if '(' in task_title and task_title.endswith(')'):
+            return int(task_title.split('(')[-1].rstrip(')'))
+        return None
