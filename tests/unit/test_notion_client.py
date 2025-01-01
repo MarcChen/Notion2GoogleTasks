@@ -126,7 +126,19 @@ class TestNotionClient:
         result = self.notion_client.mark_page_as_completed(task_id=123)
 
         assert result is None
-        mock_patch.assert_not_called()
+        mock_patch.assert_called_once_with(
+            "https://api.notion.com/v1/pages/mock_page_id",
+            headers=self.notion_client.headers,
+            json={
+                "properties": {
+                    "Status": {
+                        "status": {
+                            "name": "Done"
+                        }
+                    }
+                }
+            }
+        )
 
     @patch("services.notion.src.notion_client.requests.patch")
     def test_mark_page_as_completed_api_failure(self, mock_patch):
