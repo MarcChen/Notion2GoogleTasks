@@ -14,57 +14,83 @@ This TODO list outlines the tasks required to achieve the V2 version of the Noti
 
 
 TO-DO 
-- Pooling system to see if Task have new marked task 
-    - otherwise mark the page on notion as done 
 
+- fix last issues with last execution results : 
 
-- Creating a new task will create a page on Notion
-- PAT For private repositories: ACCESS : repo / workflow   
-    - In order to retrieve last succesfull run
+- age 'Lucas Video ' created successfully with 'Today' checkbox set to True!
+- Created Notion page '802' from Google Task
+- Page 'Blender Avancer' created successfully with 'Today' checkbox set to True!
+- Created Notion page '803' from Google Task
+- Page 'Pousser la V2 ' created successfully with 'Today' checkbox set to True!
+- Created Notion page '804' from Google Task
+- Page 'Update Google2Notion : Queue of Creds' created successfully with 'Today' checkbox set to True!
+- Created Notion page '805' from Google Task
+- Page 'Certification GitHub : Passage Exam' created successfully with 'Today' checkbox set to True!
+- Created Notion page '806' from Google Task
+- Page 'Renault Graduate ? ' created successfully with 'Today' checkbox set to True!
+- Created Notion page '807' from Google Task
+- Page 'Slide LLM' created successfully with 'Today' checkbox set to True!
+- Created Notion page '808' from Google Task
+- Page 'xgBOOST + randomforest' created successfully with 'Today' checkbox set to True!
+- Created Notion page '809' from Google Task
+- Page 'Climb up Facture' created successfully with 'Today' checkbox set to True!
+- Created Notion page '810' from Google Task
+- No Notion ID found in task 'Githubs Certification', skipping...
+- No Notion ID found in task 'LLM finir le "projet"', skipping...
+- No Notion ID found in task 'Installer Blender', skipping...
+- No Notion ID found in task 'Remplir Metrics ', skipping...
+- No Notion ID found in task 'Publier photo Volant', skipping...
+- No Notion ID found in task 'LLM Avancer la présentation & report', skipping...
+- No Notion ID found in task 'Fix VIE tracker docker image not pulling last update', skipping...
+- No Notion ID found in task 'WildFire Plot les new metrics', skipping...
+- No Notion ID found in task 'Rédiger l'intro et ma partie WildFIre', skipping...
+- No Notion ID found in task 'Nettoyer DouDoune', skipping...
+- No Notion ID found in task 'msg pierre', skipping...
+- Error syncing statuses: 'list' object has no attribute 'items'
+- SMS sent successfully.
+- Page 'Final presentation  - Language Models and Structured Data  | (601)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '811' from Google Task
+- Error fetching database: 400 Client Error: Bad Request for url: https://api.notion.com/v1/databases/2614254e32d14d5e9d9100b029fb31bb/query
+- Failed to fetch database to find task ID 735
+- Marked Notion page '735' as completed
+- Error syncing statuses: 'list' object has no attribute 'items'
+- SMS sent successfully.
+- Page 'Integration Test Page - None | (796)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '812' from Google Task
+- Page 'Integration Test Page - None | (797)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '813' from Google Task
+- Page 'Integration Test Page - None | (798)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '814' from Google Task
+- Page 'Integration Test Page - None | (799)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '815' from Google Task
+- Page 'Integration Test Page - None | (800)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '816' from Google Task
+- Error fetching database: 400 Client Error: Bad Request for url: https://api.notion.com/v1/databases/2614254e32d14d5e9d9100b029fb31bb/query
+- Failed to fetch database to find task ID 685
+- Marked Notion page '685' as completed
+- Error syncing statuses: 'list' object has no attribute 'items'
+- SMS sent successfully.
+- Page 'VIE/Graduate Program !!! Offres post études   - None | (416)' created successfully with 'Today' checkbox set to True!
+- Created Notion page '817' from Google Task
+- Error syncing statuses: 'list' object has no attribute 'items'
+- SMS sent successfully.
 
+- Fix these 4 main issues : 
+    - Being able to link a task to a subpage from notion (e.g Final presentation  - Language Models and Structured Data  | (601))
+    - No notion ID found in task 
+    - fix errors in batch quering : `Error syncing statuses: 'list' object has no attribute 'items'`
+    - Issue with the following process :  
+        - syncer.sync_pages_to_google_tasks() THEN syncer.sync_google_tasks_to_notion(last_successful_sync = last_successful_sync) 
+        - Need to make sure 1st method only sync those that were not created by tasks otherwise, it'll be duplicated
+        - THEN `sync_pages_to_google_tasks` should retrieve only `Tags != GoogleTask`
+        - THEN `sync_google_tasks_to_notion` should push `Tags == GoogleTask`
+    - Rich bar progress (and update their descriptions) for both **methods**  
 
-- Units test 
-    - create_new_page
-    - get_created_tasks_since
-    - modify_task_title
-    - get_completed_tasks_since
+---
 
-- Test : function `sync_google_tasks_to_notion`
-    - If Google Task is Done then Mark Page as Done 
-    - If Page marked as Done and still exist in Google Task, terminate it 
-    - Add Rich Progress bar
+### After Working functionalities : 
 
-- Delete TO-DO 
-- Delete temp.sh -> include it to workflow CI
-
-- Google To Notion : If Notion is marked as Done, need to mark Google Task as Done 
-    - Retrieve current Google Task IDs, check if in the IDs if status is Done in Notion
-
-
-- delete `parse_notion_response` in `noton_client.py` : group it all under the same function to retrieve database
-    - Redo `get_filtered_sorted_database` test 
-        - now it should handle basic filtered body or search for task ids  
-        - Retrieve directly parsed response
-    - Write the new test and clean unused functions 
-
-- Impelment this in `sync_google_tasks_to_notion` : 
-```
-# Get task list ID
-    task_lists = manager.list_task_lists()
-    for tasklist_name, tasklist_id in task_lists.items():
-        # Get completed tasks since last check
-        tasks = manager.list_tasks_in_tasklist(tasklist_id)
-        tasks_ids =[]
-        for task in tasks:
-            task_id = task['id']
-            print(f"Task ID: {task_id}")
-            tasks_ids.append(task_id)    
-        # Check if task is marked as done in Notion
-        pages_status = notion_client.retrieve_pages_status(tasks_ids)
-        for page_id, page_status in pages_status.items():
-            if page_status == "Done":
-                manager.mark_task_as_done(tasklist_id, page_id)
-
-```
-
-- Make mermaid flowchart to explain all the sync that the tool is doing 
+- [ ] Units test on newly created functions
+- [ ] Delete TO-DO 
+- [ ] Delete temp.sh -> include it to workflow CI
+- [ ] Make a flake8, blake, isort 
