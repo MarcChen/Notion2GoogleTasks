@@ -1,8 +1,9 @@
-import requests
-import os
-from rich import print
 import json
+import os
 from typing import Dict, List, Optional, Set
+
+import requests
+from rich import print
 
 
 class NotionClient:

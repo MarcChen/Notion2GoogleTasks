@@ -1,6 +1,8 @@
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
 

@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+
 from services.free_sms_alert.main import SMSAPI, SMSAPIError
 
 

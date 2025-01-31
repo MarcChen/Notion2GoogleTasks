@@ -1,7 +1,9 @@
-import pytest
-from unittest.mock import patch, mock_open, MagicMock
-from services.notion.src.notion_client import NotionClient
 import json
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
+
+from services.notion.src.notion_client import NotionClient
 
 # Sample data for mocking responses
 MOCK_NOTION_RESPONSE = {

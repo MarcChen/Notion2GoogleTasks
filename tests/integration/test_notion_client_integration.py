@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 from services.notion.src.notion_client import NotionClient
 
 # Variable to store the ID of the created page for reuse

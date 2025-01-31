@@ -1,6 +1,6 @@
-import os
-import json
 import argparse
+import json
+import os
 
 
 def save_tokens(save_dir):

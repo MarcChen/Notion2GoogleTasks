@@ -1,14 +1,14 @@
-from typing import Optional, Dict, Any
+import time
+from datetime import datetime
+from typing import Any, Dict, Optional
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from services.google_task.src.authentification import (
-    load_credentials,
-    refresh_access_token,
-    print_token_ttl,
-)
-from datetime import datetime
-import time
+
+from services.google_task.src.authentification import (load_credentials,
+                                                       print_token_ttl,
+                                                       refresh_access_token)
 
 
 class GoogleTasksManager:

@@ -1,13 +1,15 @@
-from datetime import datetime
 import os
-from typing import Optional, Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
+
 from rich import print
-from rich.progress import Progress
 from rich.console import Console
 from rich.live import Live
-from services.notion.src.notion_client import NotionClient
-from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from rich.progress import Progress
+
 from services.free_sms_alert.main import SMSAPI
+from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from services.notion.src.notion_client import NotionClient
 
 
 class NotionToGoogleTaskSyncer:

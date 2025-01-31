@@ -1,4 +1,5 @@
 import os
+
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
 if __name__ == "__main__":
@@ -19,8 +20,9 @@ if __name__ == "__main__":
     # syncer = NotionToGoogleTaskSyncer(notion_api_key=notion_api_key, database_id=database_id, project_root=project_root, token_path=token_path,sms_user=free_mobile_user_id, sms_password=free_mobile_api_key)
     # syncer.sync_pages_to_google_tasks()
 
-    from services.google_task.src.retrieve_tasks import GoogleTasksManager
     from datetime import datetime
+
+    from services.google_task.src.retrieve_tasks import GoogleTasksManager
 
     # Initialize GoogleTasksManager
     manager = GoogleTasksManager(token_path)

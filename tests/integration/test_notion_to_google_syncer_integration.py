@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
-from services.notion.src.notion_client import NotionClient
+
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from services.notion.src.notion_client import NotionClient
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
 

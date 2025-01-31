@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
 
 
