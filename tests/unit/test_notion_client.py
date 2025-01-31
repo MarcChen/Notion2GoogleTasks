@@ -15,7 +15,9 @@ MOCK_NOTION_RESPONSE = {
                 "Due Date": {"date": {"start": "2023-01-01"}},
                 "Name": {"title": [{"text": {"content": "Task 1"}}]},
                 "Text": {"rich_text": [{"text": {"content": "Some text"}}]},
-                "URL": {"rich_text": [{"text": {"link": {"url": "http://example.com"}}} ]},
+                "URL": {
+                    "rich_text": [{"text": {"link": {"url": "http://example.com"}}}]
+                },
                 "Parent item": {"relation": [{"id": "parent_1"}]},
             },
             "url": "http://notion.so/page_1",
@@ -26,15 +28,16 @@ MOCK_NOTION_RESPONSE = {
 }
 
 MOCK_PARENT_PAGE_RESPONSE = {
-    "properties": {
-        "Name": {"title": [{"text": {"content": "Parent Page"}}]}
-    }
+    "properties": {"Name": {"title": [{"text": {"content": "Parent Page"}}]}}
 }
+
 
 class TestNotionClient:
     def setup_method(self):
         """Initialize the NotionClient instance before each test."""
-        self.notion_client = NotionClient("fake_api_key", "fake_database_id", "/fake/project/root")
+        self.notion_client = NotionClient(
+            "fake_api_key", "fake_database_id", "/fake/project/root"
+        )
 
     @patch("requests.post")
     def test_get_filtered_sorted_database(self, mock_post):
@@ -42,7 +45,9 @@ class TestNotionClient:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = MOCK_NOTION_RESPONSE
 
-        with patch("builtins.open", mock_open(read_data=json.dumps({"filter": {}, "sort": []}))):
+        with patch(
+            "builtins.open", mock_open(read_data=json.dumps({"filter": {}, "sort": []}))
+        ):
             response = self.notion_client.get_filtered_sorted_database()
 
         assert response is not None
@@ -58,8 +63,12 @@ class TestNotionClient:
         assert parent_names["parent_1"] == "Parent Page"
 
     @patch("requests.patch")
-    @patch.object(NotionClient, 'get_filtered_sorted_database', return_value=MOCK_NOTION_RESPONSE)
-    def test_mark_page_as_completed(self, mock_get_filtered_sorted_database, mock_patch):
+    @patch.object(
+        NotionClient, "get_filtered_sorted_database", return_value=MOCK_NOTION_RESPONSE
+    )
+    def test_mark_page_as_completed(
+        self, mock_get_filtered_sorted_database, mock_patch
+    ):
         """Test mark_page_as_completed method."""
         mock_patch.return_value.status_code = 200
         mock_patch.return_value.json.return_value = {"status": "success"}
@@ -110,14 +119,16 @@ class TestNotionClient:
     @patch("services.notion.src.notion_client.requests.patch")
     def test_mark_page_as_completed_failure(self, mock_patch):
         """Test mark_page_as_completed with a failed API call."""
-        self.notion_client.get_filtered_sorted_database = MagicMock(return_value={
-            "results": [
-                {
-                    "properties": {"ID": {"unique_id": {"number": 456}}},
-                    "id": "mock_page_id"
-                }
-            ]
-        })
+        self.notion_client.get_filtered_sorted_database = MagicMock(
+            return_value={
+                "results": [
+                    {
+                        "properties": {"ID": {"unique_id": {"number": 456}}},
+                        "id": "mock_page_id",
+                    }
+                ]
+            }
+        )
 
         mock_patch_response = MagicMock()
         mock_patch_response.status_code = 400
@@ -129,28 +140,22 @@ class TestNotionClient:
         mock_patch.assert_called_once_with(
             "https://api.notion.com/v1/pages/mock_page_id",
             headers=self.notion_client.headers,
-            json={
-                "properties": {
-                    "Status": {
-                        "status": {
-                            "name": "Done"
-                        }
-                    }
-                }
-            }
+            json={"properties": {"Status": {"status": {"name": "Done"}}}},
         )
 
     @patch("services.notion.src.notion_client.requests.patch")
     def test_mark_page_as_completed_api_failure(self, mock_patch):
         """Test mark_page_as_completed with an API failure."""
-        self.notion_client.get_filtered_sorted_database = MagicMock(return_value={
-            "results": [
-                {
-                    "properties": {"ID": {"unique_id": {"number": 123}}},
-                    "id": "mock_page_id"
-                }
-            ]
-        })
+        self.notion_client.get_filtered_sorted_database = MagicMock(
+            return_value={
+                "results": [
+                    {
+                        "properties": {"ID": {"unique_id": {"number": 123}}},
+                        "id": "mock_page_id",
+                    }
+                ]
+            }
+        )
 
         mock_patch_response = MagicMock()
         mock_patch_response.status_code = 500
@@ -163,13 +168,5 @@ class TestNotionClient:
         mock_patch.assert_called_once_with(
             "https://api.notion.com/v1/pages/mock_page_id",
             headers=self.notion_client.headers,
-            json={
-                "properties": {
-                    "Status": {
-                        "status": {
-                            "name": "Done"
-                        }
-                    }
-                }
-            }
+            json={"properties": {"Status": {"status": {"name": "Done"}}}},
         )

@@ -4,6 +4,7 @@ from services.notion.src.notion_client import NotionClient
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
+
 def test_real_integration_sync_pages_to_google_tasks():
     # Load real API keys and paths from environment variables
     notion_api_key = os.getenv("NOTION_API")
@@ -29,7 +30,7 @@ def test_real_integration_sync_pages_to_google_tasks():
         project_root=project_root,
         token_path=token_path,
         sms_user=free_mobile_user_id,
-        sms_password=free_mobile_api_key
+        sms_password=free_mobile_api_key,
     )
 
     # Run the synchronization method
@@ -37,7 +38,9 @@ def test_real_integration_sync_pages_to_google_tasks():
 
     # Fetch the Notion pages after sync
     notion_pages = notion_client.get_filtered_sorted_database()
-    parsed_pages = notion_client.parse_notion_response(notion_pages) if notion_pages else []
+    parsed_pages = (
+        notion_client.parse_notion_response(notion_pages) if notion_pages else []
+    )
 
     # Fetch Google Task lists
     google_task_lists = google_tasks_manager.list_task_lists()

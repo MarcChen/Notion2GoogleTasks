@@ -11,6 +11,7 @@ def sms_client():
 
 def test_send_sms_success(monkeypatch, sms_client):
     """Test that SMS is sent successfully when the API returns 200."""
+
     def mock_get(url):
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -24,6 +25,7 @@ def test_send_sms_success(monkeypatch, sms_client):
 
 def test_send_sms_error_400(monkeypatch, sms_client):
     """Test that a MissingParameter exception is raised for HTTP 400."""
+
     def mock_get(url):
         mock_response = MagicMock()
         mock_response.status_code = 400

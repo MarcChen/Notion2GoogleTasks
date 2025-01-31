@@ -18,12 +18,12 @@ if __name__ == "__main__":
 
     # syncer = NotionToGoogleTaskSyncer(notion_api_key=notion_api_key, database_id=database_id, project_root=project_root, token_path=token_path,sms_user=free_mobile_user_id, sms_password=free_mobile_api_key)
     # syncer.sync_pages_to_google_tasks()
-    
+
     from services.google_task.src.retrieve_tasks import GoogleTasksManager
     from datetime import datetime
+
     # Initialize GoogleTasksManager
     manager = GoogleTasksManager(token_path)
-
 
     ### TESTING Sync Google Task to Notion ###
     # # # Initialize NotionClient
@@ -31,14 +31,14 @@ if __name__ == "__main__":
     # notion_client = NotionClient(notion_api_key, database_id, project_root)
     # last_time = "2024-12-30T20:12:48Z"
     # last_time = datetime.fromisoformat(last_time.replace("Z", ""))
-    
+
     # # Get task list ID
     # task_lists = manager.list_task_lists()
     # tasklist_id = task_lists.get('Mes tâches')
     # if not tasklist_id:
     #     raise Exception("Task list 'Mes tâches' not found")
     # print(f"Found task list id: {tasklist_id}")
-    
+
     # # Get completed tasks since last check
     # # completed_tasks = manager.get_completed_tasks_since(tasklist_id, last_time)
     # created_tasks = manager.get_created_tasks_since(tasklist_id, last_time)
@@ -50,7 +50,6 @@ if __name__ == "__main__":
     #     ID = notion_client.create_new_page(task_title)
     #     manager.modify_task_title(tasklist_id, task_id, f"{task_title} | ({ID})")
 
-
     # # Loop over completed tasks and mark them as done
     # for task_title, task_details in completed_tasks.items():
     #     task_id = task_details['id']
@@ -59,20 +58,21 @@ if __name__ == "__main__":
     ### END TESTING Sync Google Task to Notion ###
 
     ### Testing Sync Not Completed task in Google and Completed page in Notion  ###
-    
+
     from services.notion.src.notion_client import NotionClient
+
     notion_client = NotionClient(notion_api_key, database_id, project_root)
-    
+
     # Get task list ID
     task_lists = manager.list_task_lists()
     for tasklist_name, tasklist_id in task_lists.items():
         # Get completed tasks since last check
         tasks = manager.list_tasks_in_tasklist(tasklist_id)
-        tasks_ids =[]
+        tasks_ids = []
         for task in tasks:
-            task_id = task['id']
+            task_id = task["id"]
             print(f"Task ID: {task_id}")
-            tasks_ids.append(task_id)    
+            tasks_ids.append(task_id)
         # Check if task is marked as done in Notion
         pages_status = notion_client.retrieve_pages_status(tasks_ids)
         for page_id, page_status in pages_status.items():

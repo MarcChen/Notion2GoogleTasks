@@ -23,13 +23,15 @@ def integration_task_list(google_tasks_manager):
     task_list_name = "Integration Test"
     result = google_tasks_manager.create_task_list(task_list_name=task_list_name)
     yield result  # Provide the created task list to the tests
-    
+
     # Cleanup: Delete all tasks in the task list
     tasklist_id = result["id"]
     tasks = google_tasks_manager.list_tasks_in_tasklist(tasklist_id=tasklist_id)
     for task_title, task_details in tasks.items():
-        google_tasks_manager.delete_task(tasklist_id=tasklist_id, task_id=task_details["id"])
-    
+        google_tasks_manager.delete_task(
+            tasklist_id=tasklist_id, task_id=task_details["id"]
+        )
+
     # Cleanup: Delete the task list
     google_tasks_manager.service.tasklists().delete(tasklist=tasklist_id).execute()
 
@@ -70,7 +72,7 @@ def test_create_subtask(google_tasks_manager, integration_task_list):
     parent_task = google_tasks_manager.create_task(
         tasklist_id=tasklist_id,
         task_title=parent_task_title,
-        task_notes="This is the parent task"
+        task_notes="This is the parent task",
     )
     parent_task_id = parent_task["id"]
 
@@ -80,7 +82,7 @@ def test_create_subtask(google_tasks_manager, integration_task_list):
         tasklist_id=tasklist_id,
         parent_task_id=parent_task_id,
         subtask_title=subtask_title,
-        subtask_notes="This is a subtask"
+        subtask_notes="This is a subtask",
     )
     assert subtask["parent"] == parent_task_id
     assert subtask["title"] == subtask_title
@@ -111,7 +113,9 @@ def test_get_task_details(google_tasks_manager, integration_task_list):
     task_id = task["id"]
 
     # Get task details
-    task_details = google_tasks_manager.get_task_details(tasklist_id=tasklist_id, task_id=task_id)
+    task_details = google_tasks_manager.get_task_details(
+        tasklist_id=tasklist_id, task_id=task_id
+    )
     assert task_details["title"] == task_title
     print("Task Details:", task_details)
 
@@ -129,7 +133,9 @@ def test_mark_task_completed(google_tasks_manager, integration_task_list):
     task_id = task["id"]
 
     # Mark task as completed
-    completed_task = google_tasks_manager.mark_task_completed(tasklist_id=tasklist_id, task_id=task_id)
+    completed_task = google_tasks_manager.mark_task_completed(
+        tasklist_id=tasklist_id, task_id=task_id
+    )
     assert completed_task["status"] == "completed"
     print("Completed Task:", completed_task)
 

@@ -2,9 +2,14 @@ from typing import Optional, Dict, Any
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from services.google_task.src.authentification import load_credentials, refresh_access_token, print_token_ttl
+from services.google_task.src.authentification import (
+    load_credentials,
+    refresh_access_token,
+    print_token_ttl,
+)
 from datetime import datetime
 import time
+
 
 class GoogleTasksManager:
     """
@@ -20,7 +25,7 @@ class GoogleTasksManager:
         """
         self.token_path: str = token_path
         self.credentials: Credentials = self._get_credentials()
-        self.service = build('tasks', 'v1', credentials=self.credentials)
+        self.service = build("tasks", "v1", credentials=self.credentials)
 
     def _get_credentials(self) -> Credentials:
         """
@@ -42,7 +47,7 @@ class GoogleTasksManager:
         try:
             print_token_ttl(self.credentials)
             tasklists = self.service.tasklists().list().execute()
-            return {tl['title']: tl['id'] for tl in tasklists.get('items', [])}
+            return {tl["title"]: tl["id"] for tl in tasklists.get("items", [])}
         except Exception as e:
             raise Exception(f"Error listing task lists: {e}")
 
@@ -59,11 +64,13 @@ class GoogleTasksManager:
         try:
             tasklist = {"title": task_list_name}
             created_tasklist = self.service.tasklists().insert(body=tasklist).execute()
-            return {"title": created_tasklist['title'], "id": created_tasklist['id']}
+            return {"title": created_tasklist["title"], "id": created_tasklist["id"]}
         except Exception as e:
             raise Exception(f"Error creating task list: {e}")
 
-    def list_tasks_in_tasklist(self, tasklist_id: str, include_completed: bool = True) -> Dict[str, Dict[str, Any]]:
+    def list_tasks_in_tasklist(
+        self, tasklist_id: str, include_completed: bool = True
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Lists all tasks in a specified task list.
 
@@ -75,18 +82,22 @@ class GoogleTasksManager:
             dict: A dictionary with task titles as keys and task details as values.
         """
         try:
-            tasks = self.service.tasks().list(
-                tasklist=tasklist_id,
-                showCompleted=include_completed,
-                showHidden=include_completed
-            ).execute()
+            tasks = (
+                self.service.tasks()
+                .list(
+                    tasklist=tasklist_id,
+                    showCompleted=include_completed,
+                    showHidden=include_completed,
+                )
+                .execute()
+            )
             return {
-                task.get('title', 'No Title'): {
-                    "id": task['id'],
-                    "status": task.get('status'),
-                    "completed": task.get('completed'),
+                task.get("title", "No Title"): {
+                    "id": task["id"],
+                    "status": task.get("status"),
+                    "completed": task.get("completed"),
                 }
-                for task in tasks.get('items', [])
+                for task in tasks.get("items", [])
             }
         except Exception as e:
             raise Exception(f"Error listing tasks in task list: {e}")
@@ -114,11 +125,19 @@ class GoogleTasksManager:
             task_body = {"title": task_title, "notes": task_notes}
             if due_date:
                 if isinstance(due_date, datetime):
-                    due_date = due_date.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'  # Convert datetime to RFC 3339
+                    due_date = (
+                        due_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+                    )  # Convert datetime to RFC 3339
                 elif not isinstance(due_date, str):
-                    raise ValueError("due_date must be a datetime object or an ISO 8601 formatted string")
+                    raise ValueError(
+                        "due_date must be a datetime object or an ISO 8601 formatted string"
+                    )
                 task_body["due"] = due_date
-            response = self.service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()
+            response = (
+                self.service.tasks()
+                .insert(tasklist=tasklist_id, body=task_body)
+                .execute()
+            )
             return response
         except Exception as e:
             raise Exception(f"Error creating task: {e}")
@@ -135,7 +154,9 @@ class GoogleTasksManager:
             dict: Details of the task.
         """
         try:
-            task = self.service.tasks().get(tasklist=tasklist_id, task=task_id).execute()
+            task = (
+                self.service.tasks().get(tasklist=tasklist_id, task=task_id).execute()
+            )
             return {
                 "title": task.get("title", "No Title"),
                 "notes": task.get("notes", ""),
@@ -176,9 +197,11 @@ class GoogleTasksManager:
             dict: Details of the updated task.
         """
         try:
-            return self.service.tasks().patch(
-                tasklist=tasklist_id, task=task_id, body={"status": "completed"}
-            ).execute()
+            return (
+                self.service.tasks()
+                .patch(tasklist=tasklist_id, task=task_id, body={"status": "completed"})
+                .execute()
+            )
         except Exception as e:
             raise Exception(f"Error marking task as completed: {e}")
 
@@ -204,16 +227,30 @@ class GoogleTasksManager:
             dict: Details of the created subtask.
         """
         try:
-            subtask_body = {"title": subtask_title, "notes": subtask_notes, "due": due_date}
-            created_task = self.service.tasks().insert(tasklist=tasklist_id, body=subtask_body).execute()
+            subtask_body = {
+                "title": subtask_title,
+                "notes": subtask_notes,
+                "due": due_date,
+            }
+            created_task = (
+                self.service.tasks()
+                .insert(tasklist=tasklist_id, body=subtask_body)
+                .execute()
+            )
 
-            return self.service.tasks().move(
-                tasklist=tasklist_id, task=created_task['id'], parent=parent_task_id
-            ).execute()
+            return (
+                self.service.tasks()
+                .move(
+                    tasklist=tasklist_id, task=created_task["id"], parent=parent_task_id
+                )
+                .execute()
+            )
         except Exception as e:
             raise Exception(f"Error creating subtask: {e}")
 
-    def get_completed_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
+    def get_completed_tasks_since(
+        self, tasklist_id: str, last_checked: datetime
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Retrieves tasks that have been completed since the last check.
 
@@ -225,25 +262,32 @@ class GoogleTasksManager:
             dict: A dictionary with task titles as keys and task details as values.
         """
         try:
-            tasks = self.service.tasks().list(
-                tasklist=tasklist_id,
-                showCompleted=True,
-                showHidden=True,
-                updatedMin=last_checked.isoformat() + 'Z'
-            ).execute()
+            tasks = (
+                self.service.tasks()
+                .list(
+                    tasklist=tasklist_id,
+                    showCompleted=True,
+                    showHidden=True,
+                    updatedMin=last_checked.isoformat() + "Z",
+                )
+                .execute()
+            )
             return {
-                task.get('title', 'No Title'): {
-                    "id": task['id'],
-                    "status": task.get('status'),
-                    "completed": task.get('completed'),
-                    "updated": task.get('updated'),
+                task.get("title", "No Title"): {
+                    "id": task["id"],
+                    "status": task.get("status"),
+                    "completed": task.get("completed"),
+                    "updated": task.get("updated"),
                 }
-                for task in tasks.get('items', []) if task.get('status') == 'completed'
+                for task in tasks.get("items", [])
+                if task.get("status") == "completed"
             }
         except Exception as e:
             raise Exception(f"Error retrieving completed tasks: {e}")
 
-    def get_created_tasks_since(self, tasklist_id: str, last_checked: datetime) -> Dict[str, Dict[str, Any]]:
+    def get_created_tasks_since(
+        self, tasklist_id: str, last_checked: datetime
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Retrieves tasks that have been created since the last check.
 
@@ -255,25 +299,32 @@ class GoogleTasksManager:
             dict: A dictionary with task titles as keys and task details as values.
         """
         try:
-            tasks = self.service.tasks().list(
-                tasklist=tasklist_id,
-                showCompleted=True,
-                showHidden=True,
-                updatedMin=last_checked.isoformat() + 'Z'
-            ).execute()
+            tasks = (
+                self.service.tasks()
+                .list(
+                    tasklist=tasklist_id,
+                    showCompleted=True,
+                    showHidden=True,
+                    updatedMin=last_checked.isoformat() + "Z",
+                )
+                .execute()
+            )
             return {
-                task.get('title', 'No Title'): {
-                    "id": task['id'],
-                    "status": task.get('status'),
-                    "completed": task.get('completed'),
-                    "updated": task.get('updated'),
+                task.get("title", "No Title"): {
+                    "id": task["id"],
+                    "status": task.get("status"),
+                    "completed": task.get("completed"),
+                    "updated": task.get("updated"),
                 }
-                for task in tasks.get('items', []) if task.get('status') == 'needsAction'
+                for task in tasks.get("items", [])
+                if task.get("status") == "needsAction"
             }
         except Exception as e:
             raise Exception(f"Error retrieving created tasks: {e}")
-        
-    def modify_task_title(self, tasklist_id: str, task_id: str, new_title: str) -> Dict[str, Any]:
+
+    def modify_task_title(
+        self, tasklist_id: str, task_id: str, new_title: str
+    ) -> Dict[str, Any]:
         """
         Modifies the title of a specific task.
 
@@ -286,12 +337,14 @@ class GoogleTasksManager:
             dict: Details of the updated task.
         """
         try:
-            return self.service.tasks().patch(
-                tasklist=tasklist_id, task=task_id, body={"title": new_title}
-            ).execute()
+            return (
+                self.service.tasks()
+                .patch(tasklist=tasklist_id, task=task_id, body={"title": new_title})
+                .execute()
+            )
         except Exception as e:
             raise Exception(f"Error modifying task title: {e}")
-    
+
     def extract_task_id_from_task_title(self, task_title: str) -> Optional[int]:
         """
         Extracts the Notion page ID from the Google Task title.
@@ -302,6 +355,6 @@ class GoogleTasksManager:
         Returns:
             Optional[str]: The extracted Notion page ID, or None if not found.
         """
-        if '(' in task_title and task_title.endswith(')'):
-            return int(task_title.split('(')[-1].rstrip(')'))
+        if "(" in task_title and task_title.endswith(")"):
+            return int(task_title.split("(")[-1].rstrip(")"))
         return None

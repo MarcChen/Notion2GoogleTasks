@@ -3,24 +3,29 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 from services.sync_notion_google_task.main import NotionToGoogleTaskSyncer
 
+
 @pytest.fixture
 def mock_syncer():
-    with patch("services.sync_notion_google_task.main.NotionClient") as MockNotionClient, \
-         patch("services.sync_notion_google_task.main.GoogleTasksManager") as MockGoogleTasksManager:
+    with patch(
+        "services.sync_notion_google_task.main.NotionClient"
+    ) as MockNotionClient, patch(
+        "services.sync_notion_google_task.main.GoogleTasksManager"
+    ) as MockGoogleTasksManager:
         # Mock the dependencies
         mock_notion_client = MockNotionClient.return_value
         mock_google_tasks_manager = MockGoogleTasksManager.return_value
-        
+
         # Return the class under test with mocked dependencies
         syncer = NotionToGoogleTaskSyncer(
-            "mock_notion_api_key", 
-            "mock_database_id", 
-            "mock_project_root", 
+            "mock_notion_api_key",
+            "mock_database_id",
+            "mock_project_root",
             "mock_token_path",
-            "mock_sms_user", 
-            "mock_sms_password"
+            "mock_sms_user",
+            "mock_sms_password",
         )
         return syncer, mock_notion_client, mock_google_tasks_manager
+
 
 def test_build_task_description(mock_syncer):
     syncer, _, _ = mock_syncer
@@ -29,16 +34,21 @@ def test_build_task_description(mock_syncer):
     importance = "High"
     text = "Complete the report"
     urls = ["http://example.com", "http://example.org"]
-    due_date = (datetime.utcnow() + timedelta(days=7)).isoformat()  # Adjusted to a string type
-    
+    due_date = (
+        datetime.utcnow() + timedelta(days=7)
+    ).isoformat()  # Adjusted to a string type
+
     description = syncer.build_task_description(importance, text, urls, due_date)
-    
+
     assert "Importance: High" in description
     assert "Details: Complete the report" in description
     assert "Links:" in description
     assert " - http://example.com" in description
     assert " - http://example.org" in description
-    assert f"Due Date: {datetime.fromisoformat(due_date).strftime('%d-%m-%y')}" in description
+    assert (
+        f"Due Date: {datetime.fromisoformat(due_date).strftime('%d-%m-%y')}"
+        in description
+    )
 
     # Test case: Missing fields
     description = syncer.build_task_description(None, None, None, None)
@@ -54,6 +64,7 @@ def test_build_task_description(mock_syncer):
     long_text = "A" * 1000  # Simulating a very long task description
     description = syncer.build_task_description("Low", long_text, urls, due_date)
     assert long_text in description  # Ensure the full text is included
+
 
 def test_compute_due_date(mock_syncer):
     syncer, _, _ = mock_syncer
@@ -86,14 +97,19 @@ def test_compute_due_date(mock_syncer):
     computed_date = syncer.compute_due_date(exact_14_days)
     assert computed_date.date() == (datetime.utcnow() + timedelta(days=14)).date()
 
+
 def test_task_exists(mock_syncer):
     syncer, _, google_tasks_manager = mock_syncer
-    
+
     # Mock task list data
-    google_tasks_manager.list_tasks_in_tasklist.side_effect = lambda tasklist_id: [
-        "Task 1 | (1)",
-        "Task 2 | (2)",
-    ] if tasklist_id == "existing_tasklist_id" else []
+    google_tasks_manager.list_tasks_in_tasklist.side_effect = lambda tasklist_id: (
+        [
+            "Task 1 | (1)",
+            "Task 2 | (2)",
+        ]
+        if tasklist_id == "existing_tasklist_id"
+        else []
+    )
 
     # Test case: Task exists
     google_task_lists = {"Work": "existing_tasklist_id"}
@@ -106,15 +122,19 @@ def test_task_exists(mock_syncer):
     google_task_lists = {"Personal": "empty_tasklist_id"}
     assert syncer.task_exists(google_task_lists, "1") is False
 
+
 def test_ensure_tasklist_exists(mock_syncer):
     syncer, _, google_tasks_manager = mock_syncer
-    
+
     # Mock creating a task list
     google_tasks_manager.create_task_list.return_value = {"id": "new_tasklist_id"}
 
     # Test case: Task list already exists
     google_task_lists = {"Work": "existing_tasklist_id"}
-    assert syncer.ensure_tasklist_exists("Work", google_task_lists) == "existing_tasklist_id"
+    assert (
+        syncer.ensure_tasklist_exists("Work", google_task_lists)
+        == "existing_tasklist_id"
+    )
 
     # Test case: Task list does not exist, create new
     google_task_lists = {}
