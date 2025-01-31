@@ -180,55 +180,67 @@ class NotionToGoogleTaskSyncer:
 
     def sync_google_tasks_to_notion(self, last_successful_sync: datetime):
         """
-        Synchronizes completed Google Tasks to Notion, marking them as done.
-
-        Args:
-            last_successful_sync (datetime): The datetime of the last successful sync.
+        Synchronizes Google Tasks to Notion with proper order and status handling.
+        Processing order: 1. New Tasks → 2. Completed Tasks → 3. Status Alignment
         """
         task_lists = self.google_tasks_manager.list_task_lists()
+        
         for tasklist_name, tasklist_id in task_lists.items():
-           
-            # Sync completed task from google Task to Notion 
-            completed_tasks_since_last_run = self.google_tasks_manager.get_completed_tasks_since(tasklist_id, last_successful_sync)
-            
-            if completed_tasks_since_last_run is not None:
-                for task_title, task_details in completed_tasks_since_last_run.items():
-                    task_id = self.google_tasks_manager.extract_task_id_from_task_title(task_title)
-                    if task_id is not None:
-                        try :
-                            self.notion_client.mark_page_as_completed(task_id)
-                        except Exception as e:
-                            print(f"[red]Error marking Notion page '{task_id}' as done: {e}[/red]")
-                            self.sms_altert.send_sms(f"Error marking Notion page '{task_id}' as done: {e}")
-                            raise e
-
-            # Sync created task from google Task to Notion
-            created_tasks_since_last_run = self.google_tasks_manager.get_created_tasks_since(tasklist_id, last_successful_sync)
-
-            if created_tasks_since_last_run is not None:
-                for task_title, task_details in created_tasks_since_last_run.items():
+            # 1. Sync NEW tasks from Google Tasks to Notion first
+            created_tasks = self.google_tasks_manager.get_created_tasks_since(tasklist_id, last_successful_sync)
+            if created_tasks:
+                for task_title, task_details in created_tasks.items():
                     try:
+                        # Extract metadata before modification
                         task_id = task_details['id']
-                        ID = self.notion_client.create_new_page(task_title)
-                        self.manager.modify_task_title(tasklist_id, task_id, f"{task_title} | ({ID})")
-                        print(f"[green]Created Notion page '{ID}' based on Google Task '{task_title}'[/green]")
+                        is_completed = task_details.get('status') == 'completed'
+
+                        notion_page_id = self.notion_client.create_new_page(task_title)
+                        
+                        if is_completed:
+                            self.notion_client.mark_page_as_completed(notion_page_id)
+
+                        # Update Google Task title with Notion ID
+                        updated_title = f"{task_title} | ({notion_page_id})"
+                        self.google_tasks_manager.modify_task_title(
+                            tasklist_id=tasklist_id,
+                            task_id=task_id,
+                            new_title=updated_title
+                        )
+                        print(f"[green]Created Notion page '{notion_page_id}' from Google Task[/green]")
                     except Exception as e:
-                        print(f"[red]Error marking Notion page '{task_id}' as done: {e}[/red]")
-                        self.sms_altert.send_sms(f"Error marking Notion page '{task_id}' as done: {e}")
-                        raise e
-    
-            # Sync Active Task from Google Task with Notion Page Status
+                        print(f"[red]Error creating page for task '{task_title}': {e}[/red]")
+                        self.sms_altert.send_sms(f"Task creation error: {str(e)[:50]}")
+                        continue
+
+            # 2. Sync COMPLETED tasks to Notion (after creation to ensure pages exist)
+            completed_tasks = self.google_tasks_manager.get_completed_tasks_since(tasklist_id, last_successful_sync)
+            if completed_tasks:
+                for task_title, task_details in completed_tasks.items():
+                    try:
+                        page_id = self.google_tasks_manager.extract_task_id_from_task_title(task_title)
+                        if page_id:
+                            self.notion_client.mark_page_as_completed(page_id)
+                            print(f"[green]Marked Notion page '{page_id}' as completed[/green]")
+                    except Exception as e:
+                        print(f"[red]Error completing page '{page_id}': {e}[/red]")
+                        continue
+
+            # 3. Align statuses for ACTIVE tasks (Notion → Google Tasks)
             active_tasks = self.google_tasks_manager.list_tasks_in_tasklist(tasklist_id, include_completed=False)
-            tasks_ids =[]
-            for task_title in active_tasks:
-                id = self.google_tasks_manager.extract_task_id_from_task_title(task_title)
-                tasks_ids.append(int(id)) if id else None
-            pages_status = self.notion_client.retrieve_pages_status(tasks_ids) if tasks_ids != [] else None
-            print(f"tasklist name: {tasklist_id}", pages_status)
-            if pages_status:
-                for page in pages_status:
-                    task_id = page['task_id']
-                    page_status = page['page_status']
-                    if page_status == "Done":
-                        self.google_tasks_manager.mark_task_as_completed(tasklist_id, task_id)
-                        print(f"[green]Marked Google Task '{task_id}' as done based on Notion page '{task_id}'[/green]")
+            task_ids = [self.google_tasks_manager.extract_task_id_from_task_title(t) for t in active_tasks]
+            task_ids = [tid for tid in task_ids if tid is not None]
+            
+            if task_ids:
+                try:
+                    # Get statuses in bulk for efficiency
+                    status_mapping = self.notion_client.retrieve_pages_status(task_ids)
+                    for notion_id, status in status_mapping.items():
+                        if status == "Done":
+                            task_id = next((tid for tid in task_ids if tid == notion_id), None)
+                            if task_id:
+                                self.google_tasks_manager.mark_task_completed(tasklist_id, task_id)
+                                print(f"[green]Synced completion for task '{task_id}' to Google[/green]")
+                except Exception as e:
+                    print(f"[red]Error syncing statuses: {e}[/red]")
+                    self.sms_altert.send_sms(f"Status sync error: {str(e)[:50]}")
