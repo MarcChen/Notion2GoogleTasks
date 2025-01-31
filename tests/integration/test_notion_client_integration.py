@@ -17,25 +17,25 @@ def notion_client():
 
 def test_create_new_page_integration(notion_client):
     """Integration test for creating a new page."""
-    global CREATED_PAGE_ID
+    global CREATED_TASK_ID
     title = "Integration Test Page"
     response = notion_client.create_new_page(title)
+    
     assert response is not None, "Failed to create a new page."
-    assert response["properties"]["Name"]["title"][0]["text"]["content"] == title
-    assert response["properties"]["Today"]["checkbox"] is True
-    CREATED_PAGE_ID = response["id"]  # Store the page ID globally for subsequent tests
-    print("Created page URL:", response["url"])
+    assert isinstance(response, int), "Response should return a unique task ID."
+    CREATED_TASK_ID = response  # Store the task ID globally for subsequent tests
+    print(f"Created page with Task ID: {CREATED_TASK_ID}")
 
 def test_mark_page_as_completed_integration(notion_client):
     """Integration test for marking a page as completed."""
-    global CREATED_PAGE_ID
-    assert CREATED_PAGE_ID is not None, "No page ID available from test_create_new_page_integration."
+    global CREATED_TASK_ID
+    assert CREATED_TASK_ID is not None, "No task ID available from test_create_new_page_integration."
     
     # Mark the page as completed
-    response = notion_client.mark_page_as_completed(CREATED_PAGE_ID)
+    response = notion_client.mark_page_as_completed(CREATED_TASK_ID)
     assert response is not None, "Failed to mark page as completed."
-    assert response["properties"]["Status"]["status"]["name"] == "Done"
-    print(f"Page {CREATED_PAGE_ID} marked as 'Done'.")
+    assert response.get("properties", {}).get("Status", {}).get("status", {}).get("name") == "Done"
+    print(f"Page with Task ID {CREATED_TASK_ID} marked as 'Done'.")
 
 def test_fetch_parent_page_names_integration(notion_client):
     """Integration test for fetching parent page names."""
