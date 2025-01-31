@@ -15,7 +15,9 @@ def mock_manager():
     ) as mock_creds:
         # Mock credentials with expected universe_domain
         mock_creds.return_value = MagicMock(universe_domain="googleapis.com")
-        with patch("services.google_task.src.retrieve_tasks.build") as mock_build:
+        with patch(
+            "services.google_task.src.retrieve_tasks.build"
+        ) as mock_build:
             # Mock the Google Tasks service
             mock_service = MagicMock()
             mock_build.return_value = mock_service
@@ -77,7 +79,10 @@ def test_create_task(mock_manager):
         "id": "1",
     }
     result = mock_manager.create_task(
-        tasklist_id="1", task_title="New Task", task_notes="Details", due_date=None
+        tasklist_id="1",
+        task_title="New Task",
+        task_notes="Details",
+        due_date=None,
     )
     assert result == {"title": "New Task", "id": "1"}
 

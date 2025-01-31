@@ -23,19 +23,25 @@ def integration_task_list(google_tasks_manager):
     Deletes all tasks in the task list before deleting the task list itself.
     """
     task_list_name = "Integration Test"
-    result = google_tasks_manager.create_task_list(task_list_name=task_list_name)
+    result = google_tasks_manager.create_task_list(
+        task_list_name=task_list_name
+    )
     yield result  # Provide the created task list to the tests
 
     # Cleanup: Delete all tasks in the task list
     tasklist_id = result["id"]
-    tasks = google_tasks_manager.list_tasks_in_tasklist(tasklist_id=tasklist_id)
+    tasks = google_tasks_manager.list_tasks_in_tasklist(
+        tasklist_id=tasklist_id
+    )
     for task_title, task_details in tasks.items():
         google_tasks_manager.delete_task(
             tasklist_id=tasklist_id, task_id=task_details["id"]
         )
 
     # Cleanup: Delete the task list
-    google_tasks_manager.service.tasklists().delete(tasklist=tasklist_id).execute()
+    google_tasks_manager.service.tasklists().delete(
+        tasklist=tasklist_id
+    ).execute()
 
 
 def test_list_task_lists(google_tasks_manager):
@@ -96,7 +102,9 @@ def test_list_tasks_in_tasklist(google_tasks_manager, integration_task_list):
     Integration test: Lists tasks in the integration test task list.
     """
     tasklist_id = integration_task_list["id"]
-    tasks = google_tasks_manager.list_tasks_in_tasklist(tasklist_id=tasklist_id)
+    tasks = google_tasks_manager.list_tasks_in_tasklist(
+        tasklist_id=tasklist_id
+    )
     assert isinstance(tasks, dict)
     print("Tasks in Task List:", tasks)
 
@@ -155,6 +163,8 @@ def test_delete_task(google_tasks_manager, integration_task_list):
     task_id = task["id"]
 
     # Delete task
-    result = google_tasks_manager.delete_task(tasklist_id=tasklist_id, task_id=task_id)
+    result = google_tasks_manager.delete_task(
+        tasklist_id=tasklist_id, task_id=task_id
+    )
     assert result is True
     print("Task Deleted Successfully")

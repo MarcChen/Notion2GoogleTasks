@@ -1,14 +1,14 @@
-import time
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from services.google_task.src.authentification import (load_credentials,
-                                                       print_token_ttl,
-                                                       refresh_access_token)
+from services.google_task.src.authentification import (
+    load_credentials,
+    print_token_ttl,
+    refresh_access_token,
+)
 
 
 class GoogleTasksManager:
@@ -63,8 +63,13 @@ class GoogleTasksManager:
         """
         try:
             tasklist = {"title": task_list_name}
-            created_tasklist = self.service.tasklists().insert(body=tasklist).execute()
-            return {"title": created_tasklist["title"], "id": created_tasklist["id"]}
+            created_tasklist = (
+                self.service.tasklists().insert(body=tasklist).execute()
+            )
+            return {
+                "title": created_tasklist["title"],
+                "id": created_tasklist["id"],
+            }
         except Exception as e:
             raise Exception(f"Error creating task list: {e}")
 
@@ -142,7 +147,9 @@ class GoogleTasksManager:
         except Exception as e:
             raise Exception(f"Error creating task: {e}")
 
-    def get_task_details(self, tasklist_id: str, task_id: str) -> Dict[str, Any]:
+    def get_task_details(
+        self, tasklist_id: str, task_id: str
+    ) -> Dict[str, Any]:
         """
         Fetches details of a specific task.
 
@@ -155,7 +162,9 @@ class GoogleTasksManager:
         """
         try:
             task = (
-                self.service.tasks().get(tasklist=tasklist_id, task=task_id).execute()
+                self.service.tasks()
+                .get(tasklist=tasklist_id, task=task_id)
+                .execute()
             )
             return {
                 "title": task.get("title", "No Title"),
@@ -180,12 +189,16 @@ class GoogleTasksManager:
             bool: True if the task was successfully deleted.
         """
         try:
-            self.service.tasks().delete(tasklist=tasklist_id, task=task_id).execute()
+            self.service.tasks().delete(
+                tasklist=tasklist_id, task=task_id
+            ).execute()
             return True
         except Exception as e:
             raise Exception(f"Error deleting task: {e}")
 
-    def mark_task_completed(self, tasklist_id: str, task_id: str) -> Dict[str, Any]:
+    def mark_task_completed(
+        self, tasklist_id: str, task_id: str
+    ) -> Dict[str, Any]:
         """
         Marks a specific task as completed.
 
@@ -199,7 +212,11 @@ class GoogleTasksManager:
         try:
             return (
                 self.service.tasks()
-                .patch(tasklist=tasklist_id, task=task_id, body={"status": "completed"})
+                .patch(
+                    tasklist=tasklist_id,
+                    task=task_id,
+                    body={"status": "completed"},
+                )
                 .execute()
             )
         except Exception as e:
@@ -241,7 +258,9 @@ class GoogleTasksManager:
             return (
                 self.service.tasks()
                 .move(
-                    tasklist=tasklist_id, task=created_task["id"], parent=parent_task_id
+                    tasklist=tasklist_id,
+                    task=created_task["id"],
+                    parent=parent_task_id,
                 )
                 .execute()
             )
@@ -339,13 +358,19 @@ class GoogleTasksManager:
         try:
             return (
                 self.service.tasks()
-                .patch(tasklist=tasklist_id, task=task_id, body={"title": new_title})
+                .patch(
+                    tasklist=tasklist_id,
+                    task=task_id,
+                    body={"title": new_title},
+                )
                 .execute()
             )
         except Exception as e:
             raise Exception(f"Error modifying task title: {e}")
 
-    def extract_task_id_from_task_title(self, task_title: str) -> Optional[int]:
+    def extract_task_id_from_task_title(
+        self, task_title: str
+    ) -> Optional[int]:
         """
         Extracts the Notion page ID from the Google Task title.
 

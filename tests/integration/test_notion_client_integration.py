@@ -30,8 +30,12 @@ def test_create_new_page_integration(notion_client):
     response = notion_client.create_new_page(title)
 
     assert response is not None, "Failed to create a new page."
-    assert isinstance(response, int), "Response should return a unique task ID."
-    CREATED_TASK_ID = response  # Store the task ID globally for subsequent tests
+    assert isinstance(
+        response, int
+    ), "Response should return a unique task ID."
+    CREATED_TASK_ID = (
+        response  # Store the task ID globally for subsequent tests
+    )
     print(f"Created page with Task ID: {CREATED_TASK_ID}")
 
 
@@ -46,7 +50,10 @@ def test_mark_page_as_completed_integration(notion_client):
     response = notion_client.mark_page_as_completed(CREATED_TASK_ID)
     assert response is not None, "Failed to mark page as completed."
     assert (
-        response.get("properties", {}).get("Status", {}).get("status", {}).get("name")
+        response.get("properties", {})
+        .get("Status", {})
+        .get("status", {})
+        .get("name")
         == "Done"
     )
     print(f"Page with Task ID {CREATED_TASK_ID} marked as 'Done'.")

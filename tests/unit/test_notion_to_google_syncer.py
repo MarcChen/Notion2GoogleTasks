@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -40,7 +40,9 @@ def test_build_task_description(mock_syncer):
         datetime.utcnow() + timedelta(days=7)
     ).isoformat()  # Adjusted to a string type
 
-    description = syncer.build_task_description(importance, text, urls, due_date)
+    description = syncer.build_task_description(
+        importance, text, urls, due_date
+    )
 
     assert "Importance: High" in description
     assert "Details: Complete the report" in description
@@ -57,14 +59,18 @@ def test_build_task_description(mock_syncer):
     assert description == ""  # Should handle missing data gracefully
 
     # Test case: Empty URLs list
-    description = syncer.build_task_description("Medium", "Some text", [], due_date)
+    description = syncer.build_task_description(
+        "Medium", "Some text", [], due_date
+    )
     assert "Importance: Medium" in description
     assert "Details: Some text" in description
     assert "Links:" not in description  # No links should be added
 
     # Test case: Very long text
     long_text = "A" * 1000  # Simulating a very long task description
-    description = syncer.build_task_description("Low", long_text, urls, due_date)
+    description = syncer.build_task_description(
+        "Low", long_text, urls, due_date
+    )
     assert long_text in description  # Ensure the full text is included
 
 
@@ -83,7 +89,9 @@ def test_compute_due_date(mock_syncer):
     # Test case: due_date within 14 days
     valid_date = (datetime.utcnow() + timedelta(days=10)).isoformat()
     computed_date = syncer.compute_due_date(valid_date)
-    assert computed_date.date() == (datetime.utcnow() + timedelta(days=10)).date()
+    assert (
+        computed_date.date() == (datetime.utcnow() + timedelta(days=10)).date()
+    )
 
     # Test case: Invalid date string
     with pytest.raises(ValueError):
@@ -92,25 +100,31 @@ def test_compute_due_date(mock_syncer):
     # Test case: Past date
     past_date = (datetime.utcnow() - timedelta(days=5)).isoformat()
     computed_date = syncer.compute_due_date(past_date)
-    assert computed_date.date() == (datetime.utcnow() - timedelta(days=5)).date()
+    assert (
+        computed_date.date() == (datetime.utcnow() - timedelta(days=5)).date()
+    )
 
     # Test case: Exact 14 days
     exact_14_days = (datetime.utcnow() + timedelta(days=14)).isoformat()
     computed_date = syncer.compute_due_date(exact_14_days)
-    assert computed_date.date() == (datetime.utcnow() + timedelta(days=14)).date()
+    assert (
+        computed_date.date() == (datetime.utcnow() + timedelta(days=14)).date()
+    )
 
 
 def test_task_exists(mock_syncer):
     syncer, _, google_tasks_manager = mock_syncer
 
     # Mock task list data
-    google_tasks_manager.list_tasks_in_tasklist.side_effect = lambda tasklist_id: (
-        [
-            "Task 1 | (1)",
-            "Task 2 | (2)",
-        ]
-        if tasklist_id == "existing_tasklist_id"
-        else []
+    google_tasks_manager.list_tasks_in_tasklist.side_effect = (
+        lambda tasklist_id: (
+            [
+                "Task 1 | (1)",
+                "Task 2 | (2)",
+            ]
+            if tasklist_id == "existing_tasklist_id"
+            else []
+        )
     )
 
     # Test case: Task exists
@@ -129,7 +143,9 @@ def test_ensure_tasklist_exists(mock_syncer):
     syncer, _, google_tasks_manager = mock_syncer
 
     # Mock creating a task list
-    google_tasks_manager.create_task_list.return_value = {"id": "new_tasklist_id"}
+    google_tasks_manager.create_task_list.return_value = {
+        "id": "new_tasklist_id"
+    }
 
     # Test case: Task list already exists
     google_task_lists = {"Work": "existing_tasklist_id"}

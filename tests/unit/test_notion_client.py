@@ -1,7 +1,6 @@
 import json
 from unittest.mock import MagicMock, mock_open, patch
 
-import pytest
 
 from services.notion.src.notion_client import NotionClient
 
@@ -18,7 +17,9 @@ MOCK_NOTION_RESPONSE = {
                 "Name": {"title": [{"text": {"content": "Task 1"}}]},
                 "Text": {"rich_text": [{"text": {"content": "Some text"}}]},
                 "URL": {
-                    "rich_text": [{"text": {"link": {"url": "http://example.com"}}}]
+                    "rich_text": [
+                        {"text": {"link": {"url": "http://example.com"}}}
+                    ]
                 },
                 "Parent item": {"relation": [{"id": "parent_1"}]},
             },
@@ -48,7 +49,8 @@ class TestNotionClient:
         mock_post.return_value.json.return_value = MOCK_NOTION_RESPONSE
 
         with patch(
-            "builtins.open", mock_open(read_data=json.dumps({"filter": {}, "sort": []}))
+            "builtins.open",
+            mock_open(read_data=json.dumps({"filter": {}, "sort": []})),
         ):
             response = self.notion_client.get_filtered_sorted_database()
 
@@ -66,7 +68,9 @@ class TestNotionClient:
 
     @patch("requests.patch")
     @patch.object(
-        NotionClient, "get_filtered_sorted_database", return_value=MOCK_NOTION_RESPONSE
+        NotionClient,
+        "get_filtered_sorted_database",
+        return_value=MOCK_NOTION_RESPONSE,
     )
     def test_mark_page_as_completed(
         self, mock_get_filtered_sorted_database, mock_patch
@@ -81,7 +85,9 @@ class TestNotionClient:
 
     def test_parse_notion_response(self):
         """Test parse_notion_response method."""
-        parsed_data = self.notion_client.parse_notion_response(MOCK_NOTION_RESPONSE)
+        parsed_data = self.notion_client.parse_notion_response(
+            MOCK_NOTION_RESPONSE
+        )
 
         assert len(parsed_data) == 1
         assert parsed_data[0]["page_id"] == "page_1"
@@ -112,7 +118,9 @@ class TestNotionClient:
                 }
             ]
         }
-        parsed_data = self.notion_client.parse_notion_response(incomplete_response)
+        parsed_data = self.notion_client.parse_notion_response(
+            incomplete_response
+        )
 
         assert len(parsed_data) == 1
         assert parsed_data[0]["tags"] is None

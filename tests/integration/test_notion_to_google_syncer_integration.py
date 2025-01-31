@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 from services.google_task.src.retrieve_tasks import GoogleTasksManager
 from services.notion.src.notion_client import NotionClient
@@ -19,8 +18,12 @@ def test_real_integration_sync_pages_to_google_tasks():
     assert database_id, "DATABASE_ID environment variable is required."
     assert token_path, "TOKEN_PATH environment variable is required."
     assert project_root, "PROJECT_ROOT environment variable is required."
-    assert free_mobile_user_id, "FREE_MOBILE_USER_ID environment variable is required."
-    assert free_mobile_api_key, "FREE_MOBILE_API_KEY environment variable is required."
+    assert (
+        free_mobile_user_id
+    ), "FREE_MOBILE_USER_ID environment variable is required."
+    assert (
+        free_mobile_api_key
+    ), "FREE_MOBILE_API_KEY environment variable is required."
 
     # Initialize real clients
     notion_client = NotionClient(notion_api_key, database_id, project_root)
@@ -40,7 +43,9 @@ def test_real_integration_sync_pages_to_google_tasks():
     # Fetch the Notion pages after sync
     notion_pages = notion_client.get_filtered_sorted_database()
     parsed_pages = (
-        notion_client.parse_notion_response(notion_pages) if notion_pages else []
+        notion_client.parse_notion_response(notion_pages)
+        if notion_pages
+        else []
     )
 
     # Fetch Google Task lists
