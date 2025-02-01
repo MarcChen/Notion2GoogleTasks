@@ -125,13 +125,12 @@ class NotionClient:
         # Fetch the database to find the unique page ID corresponding to the task ID
         # In notion DB, there's 2 UID, one is the page ID (necessary for API call) and the other is the task ID
 
-        database_response = self.get_filtered_sorted_database(
-            query_page_ids=[task_id]
-        )
-        if not database_response:
-            print(
-                f"[red]Failed to fetch database to find task ID {task_id}[/red]"
+        try:
+            database_response = self.get_filtered_sorted_database(
+                query_page_ids=[task_id]
             )
+        except Exception as e:
+            print(f"[red]Error fetching database to find task ID {task_id}: {e}[/red]")
             return None
 
         parsed_data = self.parse_notion_response(database_response)
@@ -191,7 +190,7 @@ class NotionClient:
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             print(
-                f"[green]Page '{title}' created successfully with 'Today' checkbox set to True![/green]"
+                f"[green]Page with ID '{response.json().get('ID', 'N/A')}' created successfully with 'Today' checkbox set to True![/green]"
             )
             return (
                 response.json()
