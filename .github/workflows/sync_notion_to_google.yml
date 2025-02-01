@@ -10,7 +10,7 @@ jobs:
     name: Sync Notion to Google Tasks
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/main'  # Only execute on the main branch
+    # if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
     steps:
       - name: Checkout Repository
