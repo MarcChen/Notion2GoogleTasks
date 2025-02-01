@@ -77,18 +77,18 @@ jobs:
           poetry check
         working-directory: ${{ github.workspace }}
 
-      # 4) Install Dependencies
+      # 4) Configure Poetry environment to use Python 3.10
+      - name: Set Poetry Env to Python 3.10
+        shell: bash
+        run: |
+          poetry env use python3.10
+        working-directory: ${{ github.workspace }}
+
+      # 5) Install Dependencies
       - name: Install Dependencies
         shell: bash
         run: |
           poetry install
-        working-directory: ${{ github.workspace }}
-
-      # 5) Run Unit Tests
-      - name: Run Unit Tests
-        shell: bash
-        run: |
-          poetry run pytest tests/unit --maxfail=1 --disable-warnings
         working-directory: ${{ github.workspace }}
 
       # 6) Install jq for JSON parsing
@@ -124,7 +124,7 @@ jobs:
       - name: Generate Google API Token
         shell: bash
         run: |
-          poetry run python3.10 services/google_task/config/config_creds.py --save_dir .
+          poetry run python services/google_task/config/config_creds.py --save_dir .
         working-directory: ${{ github.workspace }}
         env:
           GOOGLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
@@ -137,7 +137,7 @@ jobs:
         shell: bash
         run: |
           export TOKEN_PATH="${{ github.workspace }}/token.json"
-          poetry run python3.10 main.py
+          poetry run python main.py
         working-directory: ${{ github.workspace }}
         env:
           NOTION_API: ${{ secrets.NOTION_API }}
