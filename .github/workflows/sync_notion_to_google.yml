@@ -3,14 +3,14 @@ name: Sync Notion to Google Tasks
 on:
   schedule:
     - cron: '0 8,12,16,20 * * *'
-  pull_request:
+  push:
     branches:
-      - main
+      - feature/*
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
@@ -148,4 +148,3 @@ jobs:
           FREE_MOBILE_USER_ID: ${{ secrets.FREE_MOBILE_USER_ID }}
           FREE_MOBILE_API_KEY: ${{ secrets.FREE_MOBILE_API_KEY }}
           LAST_SUCCESSFUL_SYNC: ${{ env.LAST_SUCCESSFUL_SYNC }}
-          # LAST_SUCCESSFUL_SYNC: "2025-01-12T20:12:37Z"
