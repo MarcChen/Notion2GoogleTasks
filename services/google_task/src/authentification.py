@@ -25,7 +25,5 @@ def print_token_ttl(credentials):
     if credentials.expiry:
         expiry_aware = credentials.expiry.replace(tzinfo=datetime.timezone.utc)
         now_aware = datetime.datetime.now(tz=datetime.timezone.utc)
-        ttl = (expiry_aware - now_aware).total_seconds()
-        print(f"Token TTL (seconds): {ttl}")
     else:
         print("No expiry information available for the token.")

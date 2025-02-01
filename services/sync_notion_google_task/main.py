@@ -65,12 +65,12 @@ class NotionToGoogleTaskSyncer:
                 parent_page_name = page["parent_page_name"] or None
 
                 console.print(
-                    f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]"
+                    f"[bold]Processing Page ID: {page_id}[/bold]"
                 )
 
                 if self.task_exists(google_task_lists, page_id):
                     console.print(
-                        f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]"
+                        f"[yellow]Task for page ID '{page_id}' already exists. Skipping...[/yellow]"
                     )
                     progress.advance(task)
                     continue
@@ -78,9 +78,6 @@ class NotionToGoogleTaskSyncer:
                 try:
                     tasklist_id = self.ensure_tasklist_exists(
                         tag, google_task_lists
-                    )
-                    console.print(
-                        f"  Task List ID for tag '{tag}': {tasklist_id}"
                     )
                 except Exception as e:
                     console.print(
@@ -96,7 +93,6 @@ class NotionToGoogleTaskSyncer:
                     task_description = self.build_task_description(
                         importance, text, urls, due_date
                     )
-                    console.print(f"  Task Description: {task_description}")
                 except Exception as e:
                     console.print(
                         f"[red]Error building task description: {e}[/red]"
@@ -115,14 +111,14 @@ class NotionToGoogleTaskSyncer:
                         due_date=recomputed_due_date,
                     )
                     console.print(
-                        f"[green]Task for page '{page_title}' created successfully![/green]"
+                        f"[green]Task for page ID '{page_id}' created successfully![/green]"
                     )
                 except Exception as e:
                     console.print(
-                        f"[red]Error creating task for page '{page_title}': {e}[/red]"
+                        f"[red]Error creating task for page ID '{page_id}': {e}[/red]"
                     )
                     self.sms_altert.send_sms(
-                        f"Error creating task for page '{page_title}': {e}"
+                        f"Error creating task for page ID '{page_id}': {e}"
                     )
                     raise e
 
