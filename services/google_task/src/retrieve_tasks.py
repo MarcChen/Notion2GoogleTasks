@@ -305,7 +305,7 @@ class GoogleTasksManager:
             raise Exception(f"Error retrieving completed tasks: {e}")
 
     def get_created_tasks_since(
-        self, tasklist_id: str, last_checked: datetime
+        self, tasklist_id: str, last_checked: datetime, only_needs_action: bool = False
     ) -> Dict[str, Dict[str, Any]]:
         """
         Retrieves tasks that have been created since the last check.
@@ -313,6 +313,7 @@ class GoogleTasksManager:
         Args:
             tasklist_id (str): ID of the task list.
             last_checked (datetime): The timestamp of the last check.
+            only_needs_action (bool): Whether to include only tasks that need action.
 
         Returns:
             dict: A dictionary with task titles as keys and task details as values.
@@ -328,6 +329,13 @@ class GoogleTasksManager:
                 )
                 .execute()
             )
+
+            filtered_tasks = tasks.get("items", [])
+
+            # Apply filtering only if only_needs_action is True
+            if only_needs_action:
+                filtered_tasks = [task for task in filtered_tasks if task.get("status") == "needsAction"]
+
             return {
                 task.get("title", "No Title"): {
                     "id": task["id"],
@@ -335,8 +343,7 @@ class GoogleTasksManager:
                     "completed": task.get("completed"),
                     "updated": task.get("updated"),
                 }
-                for task in tasks.get("items", [])
-                if task.get("status") == "needsAction"
+                for task in filtered_tasks
             }
         except Exception as e:
             raise Exception(f"Error retrieving created tasks: {e}")
