@@ -143,3 +143,31 @@ This pull request includes several significant changes across multiple files to 
 * [`services/free_sms_alert/main.py`](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL1-R32): Improved code readability by adding spacing and reformatting long lines. [[1]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL1-R32) [[2]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL63-R71) [[3]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL86-R101)
 * [`services/google_task/config/config_creds.py`](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L1-R4): Refactored import statements and improved argument parsing for better readability. [[1]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L1-R4) [[2]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L13-R14) [[3]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L23-R39)
 
+## [2.0.1] - 2025-02-01
+- Merged PR #26 by @MarcChen: fixing workflow issue
+# Bump Version to 2.0.0 and Fix Failing Workflow Executions
+
+This pull request primarily bumps the project version to 2.0.0 and addresses failing executions in the GitHub Actions workflow. Below is a summary of the main changes:
+
+## Workflow Configuration Updates
+
+- Updated the .github/workflows/sync_notion_to_google.yml file to fix failing workflow steps and ensure the Poetry environment uses Python 3.10 correctly.
+- Adjusted steps to run commands with python instead of python3.10.
+
+## Script Improvements
+
+- Refined console output messages in services/sync_notion_google_task/main.py to display page IDs rather than page titles.
+- Removed superfluous print statements for cleaner output.
+
+## Code Cleanup
+
+- Removed an extra print statement for token TTL in services/google_task/src/authentification.py to streamline the function.
+- By updating to version 2.0.0, these changes lay the groundwork for a more reliable workflow execution process and cleaner code output.
+
+
+
+
+
+
+
+
