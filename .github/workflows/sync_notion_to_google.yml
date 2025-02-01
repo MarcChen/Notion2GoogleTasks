@@ -1,18 +1,19 @@
 name: Sync Notion to Google Tasks
 
 on:
-  schedule:
-    - cron: '0 8,12,16,20 * * *'
   push:
     branches:
-      - feature/*
+      - feat/*
+  pull_request:
+    branches:
+      - main
+      - feat/*
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
     steps:
       - name: Checkout Repository
