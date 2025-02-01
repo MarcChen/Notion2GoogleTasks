@@ -124,3 +124,22 @@ This pull request addresses issues with the `.github/workflows/sync_notion_to_go
 
 - **Improved checks**: Enhanced error messages for Python 3.10 and Poetry installation steps to provide better clarity. (`.github/workflows/sync_notion_to_google.yml`)
 
+## [2.0.0] - 2025-02-01
+- Merged PR #25 by @MarcChen: Feature : Enhanced Synchronization, Documentation, and Refactoring for Notion2GoogleTasks
+This pull request includes several significant changes across multiple files to enhance the functionality and maintainability of the Notion2GoogleTasks project. The most important changes include the addition of new workflow steps, updates to documentation, and code refactoring for better readability and functionality.
+
+### Workflow Enhancements:
+* [`.github/workflows/sync_notion_to_google.yml`](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9R6-R8): Added steps to install `jq` for JSON parsing and retrieve the last successful sync time to ensure proper synchronization between Notion and Google Tasks. [[1]](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9R6-R8) [[2]](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9L93-R125) [[3]](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9L105-R137) [[4]](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9R150-R151)
+
+### Documentation Updates:
+* [`.github/issue_template.md`](diffhunk://#diff-13908ed03c30afd7f2dd929641a43331db108751b927a5683b87eaec100bd305R1-R27): Added a new issue template to standardize issue reporting.
+* [`CODE_OF_CONDUCT.md`](diffhunk://#diff-ffdbe3a1e7ee93cacfc080b6c635ccf3a8f6b0f00f2fb884f78c6b5f9dac8fd2R1-R79): Introduced a Contributor Covenant Code of Conduct to promote a positive community environment.
+* [`CONTRIBUTING.md`](diffhunk://#diff-eca12c0a30e25b4b46522ebf89465a03ba72a03f540796c979137931d8f92055R1-R37): Added a contributing guide to help new contributors understand the process of contributing to the project.
+* [`TODO.md`](diffhunk://#diff-5c6a1301c6b59b30a040d747d065e861d3dd98bde0e5a4356d92d594e9835986R1-R26): Created a TODO list outlining tasks required for the V2 version of the project.
+* [`flowchart.md`](diffhunk://#diff-734e84eaf48b72d04874c9056b4cca95bcf0c2c82d1da9677b183433ce497bfdR1-R137): Added a detailed flowchart for the Google Tasks and Notion sync process to provide a clear understanding of the synchronization workflows.
+
+### Code Refactoring:
+* [`main.py`](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R2-R3): Refactored to include the `last_successful_sync` environment variable and ensure proper initialization and synchronization processes. [[1]](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R2-R3) [[2]](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R13-R43)
+* [`services/free_sms_alert/main.py`](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL1-R32): Improved code readability by adding spacing and reformatting long lines. [[1]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL1-R32) [[2]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL63-R71) [[3]](diffhunk://#diff-8fab397c4efab579ad00e5c12aa6e0a6796d3491f39f5542728080039cad0c2dL86-R101)
+* [`services/google_task/config/config_creds.py`](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L1-R4): Refactored import statements and improved argument parsing for better readability. [[1]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L1-R4) [[2]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L13-R14) [[3]](diffhunk://#diff-32b8b4d07c2a49513219ca7b2582a797a670c0d3113995b890a66c4feca4c430L23-R39)
+
