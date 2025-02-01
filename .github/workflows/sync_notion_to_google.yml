@@ -2,12 +2,12 @@ name: Sync Notion to Google Tasks
 
 on:
   schedule:
-    - cron: '0 8,12,16,20 * * *'
+    - cron: '0 11,15,22 * * *'
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
@@ -90,7 +90,36 @@ jobs:
           poetry run pytest tests/unit --maxfail=1 --disable-warnings
         working-directory: ${{ github.workspace }}
 
-      # 6) Generate Google API Token
+      # 6) Install jq for JSON parsing
+      - name: Install jq
+        shell: bash
+        run: sudo apt-get install -y jq
+
+      # 7) Retrieve last successful sync time
+      - name: Retrieve last successful sync time
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OWNER="MarcChen"
+          REPO="Notion2GoogleTasks"
+          WORKFLOW_FILE="sync_notion_to_google.yml"
+
+          # Fetch last successful run details
+          last_successful_run=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$OWNER/$REPO/actions/workflows/$WORKFLOW_FILE/runs?status=success&per_page=1")
+
+          # Extract created_at timestamp
+          created_at=$(echo "$last_successful_run" | jq -r '.workflow_runs[0].created_at')
+
+          # Set default if no previous successful run
+          if [[ "$created_at" == "null" || -z "$created_at" ]]; then
+            created_at="2020-01-01T00:00:00Z"
+          fi
+
+          echo "LAST_SUCCESSFUL_SYNC=$created_at" >> $GITHUB_ENV
+
+      # 8) Generate Google API Token
       - name: Generate Google API Token
         shell: bash
         run: |
@@ -102,7 +131,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
-      # 7) Sync Notion to Google Tasks
+      # 9) Sync Notion to Google Tasks
       - name: Sync Notion to Google Tasks
         shell: bash
         run: |
@@ -115,3 +144,4 @@ jobs:
           PROJECT_ROOT: ${{ github.workspace }}
           FREE_MOBILE_USER_ID: ${{ secrets.FREE_MOBILE_USER_ID }}
           FREE_MOBILE_API_KEY: ${{ secrets.FREE_MOBILE_API_KEY }}
+          LAST_SUCCESSFUL_SYNC: ${{ env.LAST_SUCCESSFUL_SYNC }}

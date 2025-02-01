@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+
 from services.free_sms_alert.main import SMSAPI, SMSAPIError
 
 
@@ -10,8 +12,12 @@ def real_sms_client():
     user = os.getenv("FREE_MOBILE_USER_ID")
     password = os.getenv("FREE_MOBILE_API_KEY")
 
-    assert user is not None, "Missing environment variable: FREE_MOBILE_USER_ID"
-    assert password is not None, "Missing environment variable: FREE_MOBILE_API_KEY"
+    assert (
+        user is not None
+    ), "Missing environment variable: FREE_MOBILE_USER_ID"
+    assert (
+        password is not None
+    ), "Missing environment variable: FREE_MOBILE_API_KEY"
 
     return SMSAPI(user=user, password=password)
 

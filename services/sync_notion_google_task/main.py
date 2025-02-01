@@ -1,19 +1,33 @@
 from datetime import datetime
-import os
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
+
 from rich import print
-from rich.progress import Progress
 from rich.console import Console
 from rich.live import Live
-from services.notion.src.notion_client import NotionClient
-from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from rich.progress import Progress
+
 from services.free_sms_alert.main import SMSAPI
+from services.google_task.src.retrieve_tasks import GoogleTasksManager
+from services.notion.src.notion_client import NotionClient
+
 
 class NotionToGoogleTaskSyncer:
-    def __init__(self, notion_api_key: str, database_id: str, project_root: str, token_path: str, sms_user: str, sms_password: str):
-        self.notion_client = NotionClient(notion_api_key, database_id, project_root)
+    def __init__(
+        self,
+        notion_api_key: str,
+        database_id: str,
+        project_root: str,
+        token_path: str,
+        sms_user: str,
+        sms_password: str,
+    ):
+        self.notion_client = NotionClient(
+            notion_api_key, database_id, project_root
+        )
         self.google_tasks_manager = GoogleTasksManager(token_path)
         self.sms_altert = SMSAPI(sms_user, sms_password)
+
+    # Method to sync Notion pages to Google Tasks
 
     def sync_pages_to_google_tasks(self):
         """
@@ -30,64 +44,93 @@ class NotionToGoogleTaskSyncer:
         console = Console()
         progress = Progress()
 
-        task = progress.add_task("[cyan]Processing Pages...", total=len(parsed_pages))
+        task = progress.add_task(
+            "[cyan]Processing Pages...", total=len(parsed_pages)
+        )
 
         with Live(progress, console=console, refresh_per_second=10):
             for page in parsed_pages:
-                page_id = page['unique_id']
-                page_title = page['title']
-                tag = page['tags'] or "NoTag"
-                due_date = page['due_date']
+                page_id = page["unique_id"]
+                page_title = page["title"]
+                tag = page["tags"] or "NoTag"
+                due_date = page["due_date"]
 
                 # Adjust the due date to today if it's too far in the future.
                 # This is a personal preference to ensure tasks are dealt with promptly.
-                recomputed_due_date = self.compute_due_date(page['due_date']) 
-                
-                importance = page['importance']
-                text = page['text']
-                urls = page['url']
-                parent_page_name = page['parent_page_name'] or None
+                recomputed_due_date = self.compute_due_date(page["due_date"])
 
-                console.print(f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]")
+                importance = page["importance"]
+                text = page["text"]
+                urls = page["url"]
+                parent_page_name = page["parent_page_name"] or None
+
+                console.print(
+                    f"[bold]Processing Page: {page_title} (ID: {page_id})[/bold]"
+                )
 
                 if self.task_exists(google_task_lists, page_id):
-                    console.print(f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]")
+                    console.print(
+                        f"[yellow]Task for page '{page_title}' already exists. Skipping...[/yellow]"
+                    )
                     progress.advance(task)
                     continue
 
                 try:
-                    tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
-                    console.print(f"  Task List ID for tag '{tag}': {tasklist_id}")
+                    tasklist_id = self.ensure_tasklist_exists(
+                        tag, google_task_lists
+                    )
+                    console.print(
+                        f"  Task List ID for tag '{tag}': {tasklist_id}"
+                    )
                 except Exception as e:
-                    console.print(f"[red]Error ensuring task list for tag '{tag}': {e}[/red]")
+                    console.print(
+                        f"[red]Error ensuring task list for tag '{tag}': {e}[/red]"
+                    )
                     progress.advance(task)
-                    self.sms_altert.send_sms(f"Error ensuring task list for tag '{tag}': {e}")
-                    continue
+                    self.sms_altert.send_sms(
+                        f"Error ensuring task list for tag '{tag}': {e}"
+                    )
+                    raise e
 
                 try:
-                    task_description = self.build_task_description(importance, text, urls, due_date)
+                    task_description = self.build_task_description(
+                        importance, text, urls, due_date
+                    )
                     console.print(f"  Task Description: {task_description}")
                 except Exception as e:
-                    console.print(f"[red]Error building task description: {e}[/red]")
+                    console.print(
+                        f"[red]Error building task description: {e}[/red]"
+                    )
                     progress.advance(task)
-                    self.sms_altert.send_sms(f"Error building task description: {e}")
-                    continue
+                    self.sms_altert.send_sms(
+                        f"Error building task description: {e}"
+                    )
+                    raise e
 
                 try:
                     self.google_tasks_manager.create_task(
                         tasklist_id=tasklist_id,
                         task_title=f"{page_title} - {parent_page_name} | ({page_id})",
                         task_notes=task_description,
-                        due_date=recomputed_due_date
+                        due_date=recomputed_due_date,
                     )
-                    console.print(f"[green]Task for page '{page_title}' created successfully![/green]")
+                    console.print(
+                        f"[green]Task for page '{page_title}' created successfully![/green]"
+                    )
                 except Exception as e:
-                    console.print(f"[red]Error creating task for page '{page_title}': {e}[/red]")
-                    self.sms_altert.send_sms(f"Error creating task for page '{page_title}': {e}")
+                    console.print(
+                        f"[red]Error creating task for page '{page_title}': {e}[/red]"
+                    )
+                    self.sms_altert.send_sms(
+                        f"Error creating task for page '{page_title}': {e}"
+                    )
+                    raise e
 
                 progress.advance(task)
 
-    def task_exists(self, google_task_lists: Dict[str, str], page_id: str) -> bool:
+    def task_exists(
+        self, google_task_lists: Dict[str, str], page_id: str
+    ) -> bool:
         """
         Checks if a task for the given Notion page ID already exists in Google Tasks.
 
@@ -99,12 +142,18 @@ class NotionToGoogleTaskSyncer:
             bool: True if the task exists, False otherwise.
         """
         for tasklist_name, tasklist_id in google_task_lists.items():
-            tasks = self.google_tasks_manager.list_tasks_in_tasklist(tasklist_id)
-            if any(task_title.endswith(f"({page_id})") for task_title in tasks):
+            tasks = self.google_tasks_manager.list_tasks_in_tasklist(
+                tasklist_id
+            )
+            if any(
+                task_title.endswith(f"({page_id})") for task_title in tasks
+            ):
                 return True
         return False
 
-    def ensure_tasklist_exists(self, tag: Optional[str], google_task_lists: Dict[str, str]) -> str:
+    def ensure_tasklist_exists(
+        self, tag: Optional[str], google_task_lists: Dict[str, str]
+    ) -> str:
         """
         Ensures that a task list for the given tag exists, creating it if necessary.
 
@@ -119,11 +168,17 @@ class NotionToGoogleTaskSyncer:
 
         if tag not in google_task_lists:
             created_tasklist = self.google_tasks_manager.create_task_list(tag)
-            google_task_lists[tag] = created_tasklist['id']
+            google_task_lists[tag] = created_tasklist["id"]
 
         return google_task_lists[tag]
 
-    def build_task_description(self, importance: Optional[str], text: Optional[str], urls: Optional[List[str]], due_date: Optional[str]) -> str:
+    def build_task_description(
+        self,
+        importance: Optional[str],
+        text: Optional[str],
+        urls: Optional[List[str]],
+        due_date: Optional[str],
+    ) -> str:
         """
         Builds a task description from the given properties.
 
@@ -147,7 +202,9 @@ class NotionToGoogleTaskSyncer:
                 description_lines.append(f" - {url}")
         if due_date:
             due_date = datetime.fromisoformat(due_date)
-            description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
+            description_lines.append(
+                f"Due Date: {due_date.strftime('%d-%m-%y')}"
+            )
         return "\n".join(description_lines)
 
     def compute_due_date(self, due_date_str: Optional[str]) -> datetime:
@@ -172,3 +229,183 @@ class NotionToGoogleTaskSyncer:
             due_date = today
 
         return due_date
+
+    def extract_page_id_from_task_title(
+        self, task_title: str
+    ) -> Optional[int]:
+        """
+        Extracts the Notion page ID from the Google Task title.
+        Args:
+            task_title (str): The title of the Google Task.
+        Returns:
+            Optional[int]: The extracted Notion page ID as an integer, or None if not found.
+        """
+        if "(" in task_title and task_title.endswith(")"):
+            try:
+                return int(task_title.split("(")[-1].rstrip(")"))
+            except ValueError:
+                return None
+        return None
+
+    # Method to sync completed Google Tasks to Notion #
+
+    def sync_google_tasks_to_notion(self, last_successful_sync: datetime):
+        """
+        Synchronizes Google Tasks to Notion with proper order and status handling.
+        Processing order: 1. New Tasks → 2. Completed Tasks → 3. Status Alignment
+        """
+
+        def print_progress(
+            current_step: int, total_steps: int, step_description: str
+        ):
+            """
+            Prints a simple progress message in the form:
+                Step X/Y: step_description
+            """
+            print(
+                f"\n[blue]Step {current_step}/{total_steps}: {step_description}[/blue]"
+            )
+
+        TOTAL_STEPS = 3
+        task_lists = self.google_tasks_manager.list_task_lists()
+
+        for tasklist_name, tasklist_id in task_lists.items():
+            # Print out the task list name
+            print(f"\n[bold]Processing Task List:[/bold] {tasklist_name}")
+
+            # -----------------------------
+            # Part 1: Sync NEW tasks
+            # -----------------------------
+            print_progress(
+                current_step=1,
+                total_steps=TOTAL_STEPS,
+                step_description="Sync NEW tasks from Google Tasks to Notion",
+            )
+            created_tasks = self.google_tasks_manager.get_created_tasks_since(
+                tasklist_id, last_successful_sync
+            )
+            if created_tasks:
+                for task_title, task_details in created_tasks.items():
+                    try:
+                        task_id = task_details["id"]
+                        is_completed = (
+                            task_details.get("status") == "completed"
+                        )
+                        potential_notion_id = (
+                            self.extract_page_id_from_task_title(task_title)
+                        )
+
+                        if potential_notion_id:
+                            if is_completed:
+                                self.notion_client.mark_page_as_completed(
+                                    potential_notion_id
+                                )
+                            continue
+
+                        notion_page_id = self.notion_client.create_new_page(
+                            task_title
+                        )
+                        updated_title = f"{task_title} | ({notion_page_id})"
+                        self.google_tasks_manager.modify_task_title(
+                            tasklist_id=tasklist_id,
+                            task_id=task_id,
+                            new_title=updated_title,
+                        )
+                    except Exception as e:
+                        print(
+                            f"[red]Error creating page for task '{task_title}': {e}[/red]"
+                        )
+                        self.sms_altert.send_sms(
+                            f"Task creation error: {str(e)[:50]}"
+                        )
+                        continue
+
+            # -----------------------------
+            # Part 2: Sync COMPLETED tasks
+            # -----------------------------
+            print_progress(
+                current_step=2,
+                total_steps=TOTAL_STEPS,
+                step_description="Sync COMPLETED tasks to Notion",
+            )
+            completed_tasks = (
+                self.google_tasks_manager.get_completed_tasks_since(
+                    tasklist_id, last_successful_sync
+                )
+            )
+            if completed_tasks:
+                created_task_ids = (
+                    {details["id"] for details in created_tasks.values()}
+                    if created_tasks
+                    else set()
+                )
+                for task_title, task_details in completed_tasks.items():
+                    if task_details["id"] in created_task_ids:
+                        continue
+                    try:
+                        notion_page_id = self.extract_page_id_from_task_title(
+                            task_title
+                        )
+                        if not notion_page_id:
+                            print(
+                                "[yellow]No Notion ID found in task title, skipping...[/yellow]"
+                            )
+                            continue
+                        self.notion_client.mark_page_as_completed(
+                            notion_page_id
+                        )
+                    except Exception as e:
+                        print(f"[red]Error updating completed task: {e}[/red]")
+                        self.sms_alert.send_sms(
+                            f"Error updating completed task: {str(e)[:50]}"
+                        )
+                        continue
+
+            # -----------------------------
+            # Part 3: Align statuses (Notion → Google Tasks)
+            # -----------------------------
+            print_progress(
+                current_step=3,
+                total_steps=TOTAL_STEPS,
+                step_description="Align statuses for ACTIVE tasks (Notion → Google)",
+            )
+            active_tasks = self.google_tasks_manager.list_tasks_in_tasklist(
+                tasklist_id, include_completed=False
+            )
+
+            notion_to_google = {}
+            for title, task_data in active_tasks.items():
+                notion_id = (
+                    self.google_tasks_manager.extract_task_id_from_task_title(
+                        title
+                    )
+                )
+                if notion_id is not None:
+                    notion_to_google[str(notion_id)] = task_data["id"]
+
+            if notion_to_google:
+                try:
+                    notion_ids = [
+                        int(notion_id) for notion_id in notion_to_google.keys()
+                    ]
+                    status_mapping = self.notion_client.retrieve_pages_status(
+                        notion_ids
+                    )
+                    for status_item in status_mapping:
+                        notion_id = str(status_item["task_id"])
+                        status = status_item["page_status"]
+                        if status == "Done":
+                            google_task_id = notion_to_google.get(notion_id)
+                            if google_task_id:
+                                self.google_tasks_manager.mark_task_completed(
+                                    tasklist_id, google_task_id
+                                )
+                                print(
+                                    f"Marked Google Task ID '{google_task_id}' as completed"
+                                )
+                except Exception as e:
+                    print(f"[red]Error syncing statuses: {e}[/red]")
+
+            print(
+                "[green]Done processing all steps for this task list![/green]"
+            )
