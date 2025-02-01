@@ -164,3 +164,30 @@ def test_ensure_tasklist_exists(mock_syncer):
     tasklist_id = syncer.ensure_tasklist_exists(None, google_task_lists)
     assert tasklist_id == "new_tasklist_id"
     assert google_task_lists["NoTag"] == "new_tasklist_id"
+
+
+def test_extract_page_id_from_task_title(mock_syncer):
+    syncer, _, _ = mock_syncer
+
+    # Test case: Valid task title with ID
+    assert syncer.extract_page_id_from_task_title("Task Name (123)") == 123
+
+    # Test case: Task title with non-numeric ID
+    assert syncer.extract_page_id_from_task_title("Task Name (ABC)") is None
+
+    # Test case: Task title without parentheses
+    assert syncer.extract_page_id_from_task_title("Task Name 123") is None
+
+    # Test case: Task title with misplaced parentheses
+    assert syncer.extract_page_id_from_task_title("Task Name (123") is None
+
+    # Test case: Empty task title
+    assert syncer.extract_page_id_from_task_title("") is None
+
+    # Test case: Task title with multiple parentheses
+    assert (
+        syncer.extract_page_id_from_task_title("Task (456) Name (123)") == 123
+    )
+
+    # Test case: Task title with only parentheses
+    assert syncer.extract_page_id_from_task_title("()") is None
