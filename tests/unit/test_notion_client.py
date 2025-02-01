@@ -1,7 +1,6 @@
 import json
 from unittest.mock import MagicMock, mock_open, patch
 
-
 from services.notion.src.notion_client import NotionClient
 
 # Sample data for mocking responses

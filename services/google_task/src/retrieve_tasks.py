@@ -4,11 +4,9 @@ from typing import Any, Dict, Optional
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from services.google_task.src.authentification import (
-    load_credentials,
-    print_token_ttl,
-    refresh_access_token,
-)
+from services.google_task.src.authentification import (load_credentials,
+                                                       print_token_ttl,
+                                                       refresh_access_token)
 
 
 class GoogleTasksManager:
