@@ -105,35 +105,83 @@ def test_create_subtask(mock_manager):
     assert result["parent"] == "1"
     assert result["id"] == "2"
 
+
 def test_get_created_tasks_since(mock_manager):
     """
     Test retrieving tasks created since the last check.
     """
     from datetime import datetime
-    
+
     last_checked = datetime.utcnow()
     tasklist_id = "test_tasklist"
-    
+
     # Mock the API response
     mock_manager.service.tasks().list().execute.return_value = {
         "items": [
-            {"title": "Task 1", "id": "1", "status": "needsAction", "completed": None, "updated": "2023-11-05T12:00:00Z"},
-            {"title": "Task 2", "id": "2", "status": "completed", "completed": "2023-11-06T12:00:00Z", "updated": "2023-11-06T12:00:00Z"},
-            {"title": "Task 3", "id": "3", "status": "needsAction", "completed": None, "updated": "2023-11-07T12:00:00Z"},
+            {
+                "title": "Task 1",
+                "id": "1",
+                "status": "needsAction",
+                "completed": None,
+                "updated": "2023-11-05T12:00:00Z",
+            },
+            {
+                "title": "Task 2",
+                "id": "2",
+                "status": "completed",
+                "completed": "2023-11-06T12:00:00Z",
+                "updated": "2023-11-06T12:00:00Z",
+            },
+            {
+                "title": "Task 3",
+                "id": "3",
+                "status": "needsAction",
+                "completed": None,
+                "updated": "2023-11-07T12:00:00Z",
+            },
         ]
     }
-    
+
     # Test without filtering by needsAction
-    result_all = mock_manager.get_created_tasks_since(tasklist_id, last_checked, only_needs_action=False)
+    result_all = mock_manager.get_created_tasks_since(
+        tasklist_id, last_checked, only_needs_action=False
+    )
     assert result_all == {
-        "Task 1": {"id": "1", "status": "needsAction", "completed": None, "updated": "2023-11-05T12:00:00Z"},
-        "Task 2": {"id": "2", "status": "completed", "completed": "2023-11-06T12:00:00Z", "updated": "2023-11-06T12:00:00Z"},
-        "Task 3": {"id": "3", "status": "needsAction", "completed": None, "updated": "2023-11-07T12:00:00Z"},
+        "Task 1": {
+            "id": "1",
+            "status": "needsAction",
+            "completed": None,
+            "updated": "2023-11-05T12:00:00Z",
+        },
+        "Task 2": {
+            "id": "2",
+            "status": "completed",
+            "completed": "2023-11-06T12:00:00Z",
+            "updated": "2023-11-06T12:00:00Z",
+        },
+        "Task 3": {
+            "id": "3",
+            "status": "needsAction",
+            "completed": None,
+            "updated": "2023-11-07T12:00:00Z",
+        },
     }
-    
+
     # Test filtering by needsAction
-    result_filtered = mock_manager.get_created_tasks_since(tasklist_id, last_checked, only_needs_action=True)
+    result_filtered = mock_manager.get_created_tasks_since(
+        tasklist_id, last_checked, only_needs_action=True
+    )
     assert result_filtered == {
-        "Task 1": {"id": "1", "status": "needsAction", "completed": None, "updated": "2023-11-05T12:00:00Z"},
-        "Task 3": {"id": "3", "status": "needsAction", "completed": None, "updated": "2023-11-07T12:00:00Z"},
+        "Task 1": {
+            "id": "1",
+            "status": "needsAction",
+            "completed": None,
+            "updated": "2023-11-05T12:00:00Z",
+        },
+        "Task 3": {
+            "id": "3",
+            "status": "needsAction",
+            "completed": None,
+            "updated": "2023-11-07T12:00:00Z",
+        },
     }

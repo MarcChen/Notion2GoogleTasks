@@ -130,7 +130,9 @@ class NotionClient:
                 query_page_ids=[task_id]
             )
         except Exception as e:
-            print(f"[red]Error fetching database to find task ID {task_id}: {e}[/red]")
+            print(
+                f"[red]Error fetching database to find task ID {task_id}: {e}[/red]"
+            )
             return None
 
         parsed_data = self.parse_notion_response(database_response)

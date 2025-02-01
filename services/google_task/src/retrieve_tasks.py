@@ -305,7 +305,10 @@ class GoogleTasksManager:
             raise Exception(f"Error retrieving completed tasks: {e}")
 
     def get_created_tasks_since(
-        self, tasklist_id: str, last_checked: datetime, only_needs_action: bool = False
+        self,
+        tasklist_id: str,
+        last_checked: datetime,
+        only_needs_action: bool = False,
     ) -> Dict[str, Dict[str, Any]]:
         """
         Retrieves tasks that have been created since the last check.
@@ -334,7 +337,11 @@ class GoogleTasksManager:
 
             # Apply filtering only if only_needs_action is True
             if only_needs_action:
-                filtered_tasks = [task for task in filtered_tasks if task.get("status") == "needsAction"]
+                filtered_tasks = [
+                    task
+                    for task in filtered_tasks
+                    if task.get("status") == "needsAction"
+                ]
 
             return {
                 task.get("title", "No Title"): {
