@@ -68,9 +68,10 @@ class NotionToGoogleTaskSyncer:
                     f"[bold]Processing Page ID: {page_id}[/bold]"
                 )
 
-                if self.task_exists(google_task_lists, page_id):
+                # Modify check: also skip if the Notion page has the FromTask checkbox enabled
+                if self.task_exists(google_task_lists, page_id) or page.get("FromTask", False):
                     console.print(
-                        f"[yellow]Task for page ID '{page_id}' already exists. Skipping...[/yellow]"
+                        f"[yellow]Task for page ID '{page_id}' already exists or FromTask enabled. Skipping...[/yellow]"
                     )
                     progress.advance(task)
                     continue
@@ -298,8 +299,9 @@ class NotionToGoogleTaskSyncer:
                                 )
                             continue
 
+                        # Create new Notion page with FromTask checkbox = True
                         notion_page_id = self.notion_client.create_new_page(
-                            task_title
+                            task_title, from_task=True
                         )
                         updated_title = f"{task_title} | ({notion_page_id})"
                         self.google_tasks_manager.modify_task_title(
