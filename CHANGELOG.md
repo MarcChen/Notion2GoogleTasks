@@ -171,3 +171,25 @@ This pull request primarily bumps the project version to 2.0.0 and addresses fai
 
 
 
+## [2.0.2] - 2025-02-04
+- Merged PR #28 by @MarcChen: fix : duplicated created tasks 
+### Fix: Duplicated Created Tasks
+
+This pull request addresses an issue where tasks were being duplicated during synchronization between Notion and Google Tasks. The fix introduces a new mechanism to mark pages that originate from tasks by adding a `FromTask` checkbox property in Notion. This property helps prevent redundant task creation during sync operations.
+
+#### Key Changes:
+
+- **Notion Client Updates:**
+  - **`create_new_page` Method:**  
+    An optional `from_task` parameter has been added to set the `FromTask` checkbox when creating a new page in Notion.
+  - **`parse_notion_response` Method:**  
+    Updated to extract the `FromTask` checkbox value from Notion’s response, ensuring that the task origin is correctly tracked in the parsed data.
+
+- **Synchronization Logic Updates:**
+  - **`sync_pages_to_google_tasks` Method:**  
+    Modified to skip pages where the `FromTask` checkbox is enabled, preventing the creation of duplicate tasks during synchronization.
+  - **`print_progress` Method:**  
+    Now creates new Notion pages with the `FromTask` checkbox set to `True` when tasks are being synchronized from Google Tasks, ensuring the origin is properly flagged.
+
+This fix ensures that tasks originating from Google Tasks are not re-created in Notion during subsequent syncs, effectively eliminating the duplication issue.
+
