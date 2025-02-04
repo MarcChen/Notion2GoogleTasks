@@ -1,45 +1,60 @@
-# Notion2GoogleTasks
+# Notion2GoogleTasks 📝➡️📋
 
-## Overview
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/MarcChen/Notion2GoogleTasks/blob/master/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
 
-**Notion2GoogleTasks** is a synchronization tool that bridges your Notion database and Google Tasks. With this tool, you can seamlessly sync tasks from your Notion database to Google Tasks, ensuring you stay on top of your to-do lists.
+## Table of Contents 📚
+- [Overview](#overview)
+- [Features](#features)
+- [Why Use This?](#why-use-this)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-### Current Features (v1.0.0)
-- **One-Way Sync**: Sync tasks from Notion to Google Tasks.
-  - Tasks are retrieved from a specified Notion database based on a [filter](./services/notion/config/query_payload.json).
-  - If a task already exists in Google Tasks, it is not duplicated.
-  - New tasks are added to a task list named after the tag of the corresponding Notion page.
+## Overview 🌐
+Notion2GoogleTasks is a tool designed to seamlessly integrate **Notion** with **Google Tasks**, allowing users to synchronize their tasks across these platforms effortlessly. By automating the transfer of data, this application eliminates manual work and enhances productivity.
 
-### Upcoming in v2.0
-- **Two-Way Sync**:
-  - New tasks created in Google Tasks will be uploaded to the specified Notion database.
-  - Task status changes (e.g., marking as done) will be reflected in both Notion and Google Tasks.
+> Note: While there are services like Zapier that offer similar functionality <button class="citation-flag" data-index="4">, our goal is to provide a lightweight, customizable solution tailored specifically for power users who prefer direct control over their integrations.
 
-## Main Features
-1. **Efficient Syncing**:
-   - Avoids duplication by checking existing tasks.
-   - Tags on Notion pages are used to group tasks into corresponding Google Task lists.
-2. **Customizable**:
-   - Filters allow you to specify which Notion tasks should be synced.
+## Features ✨
+- Automatic synchronization between Notion and Google Tasks.
+- Supports bi-directional syncing.
+- Customizable mappings for fields such as titles, descriptions, due dates, etc.
+- Lightweight and easy-to-use interface.
 
-## Missing Features
-- Real-time updates are not currently supported; sync is manual or scheduled via cron jobs or workflows.
-- Due to limitations of the Google Tasks API, only due dates can be applied to tasks, not specific times.
+## Why Use This? 🤔
+If you're looking for a straightforward method to keep your tasks organized across multiple platforms without relying on third-party services, then Notion2GoogleTasks might be exactly what you need! It offers flexibility and customization options not always available through pre-built integrations.
 
+## Prerequisites 🔧
+Before getting started, ensure you have the following installed:
+- Python 3.x
+- pip (Python package manager)
+- A Google account with access to Google Tasks API
+- A Notion account with API access enabled
 
-## Installation and Usage
-For detailed steps, refer to the [Quickstart Guide](./Quickstart.md).
+## Installation 💻
+To install Notion2GoogleTasks, follow these steps:
 
-### Requirements
-- **Notion**:
-    - Notion database ID
-    - Query [filter](./services/notion/config/query_payload.json)
-    - API KEY 
-- **Google API**:
-    - OAuth2 client configuration
-    - Access token retrieval
+1. Clone the repository: git clone https://github.com/MarcChen/Notion2GoogleTasks.git cd Notion2GoogleTasks
+2. Install dependencies: `poetry install`
+3. Configure your environment variables by copying `..env_template` to `.env` and filling out the necessary credentials.
 
+## Usage 🚀
+After installation, run the script via command line: `poetry run python main.py` with the exported `.env` vars.
 
-## Contributing
+## Configuration ⚙️
+You can adjust various settings within the configuration file (`config.json`) to better suit your notion query preferences.
 
-Contributions are welcome! Please open an issue or submit a pull request.
+## Contributing 👥
+We welcome contributions from everyone! Whether it's reporting bugs, suggesting improvements, or submitting pull requests, all help is appreciated. Please read our [Contribution Guidelines](CONTRIBUTING.md) before getting started.
+
+## License 📜
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments 🙏
+Special thanks to the communities behind:
+- [Notion API Documentation](https://developers.notion.com/)
+- [Google Tasks API](https://developers.google.com/tasks/quickstart/python)
