@@ -169,15 +169,17 @@ class NotionClient:
             print(f"[red]Error marking task {task_id} as 'Done': {e}[/red]")
             return None
 
-    def create_new_page(self, title: str) -> Optional[str]:
+    def create_new_page(self, title: str, from_task: bool = False) -> Optional[str]:
         """
-        Create a new page in the Notion database with the "Today" checkbox set to True.
-
+        Create a new page in the Notion database.
+        If from_task is True, sets the FromTask checkbox to True.
+        
         Args:
             title (str): The title of the new page.
-
+            from_task (bool): Flag to indicate this page comes from a task.
+        
         Returns:
-            Optional[str]: The ID of the newly created page if successful; None otherwise.
+            Optional[str]: The unique page ID if successful; None otherwise.
         """
         url = "https://api.notion.com/v1/pages"
         payload = {
@@ -185,6 +187,7 @@ class NotionClient:
             "properties": {
                 "Name": {"title": [{"text": {"content": title}}]},
                 "Today": {"checkbox": True},
+                "FromTask": {"checkbox": from_task},
             },
         }
 
@@ -192,7 +195,7 @@ class NotionClient:
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             print(
-                f"[green]Page with ID '{response.json().get('ID', 'N/A')}' created successfully with 'Today' checkbox set to True![/green]"
+                f"[green]Page with ID '{response.json().get('ID', 'N/A')}' created successfully with 'FromTask' set to {from_task}![/green]"
             )
             return (
                 response.json()
@@ -352,6 +355,8 @@ class NotionClient:
                     .get("unique_id", {})
                     .get("number", None)
                 )
+                # Extract "FromTask" checkbox from properties.
+                from_task = properties.get("FromTask", {}).get("checkbox", False)
 
                 parsed_data.append(
                     {
@@ -370,6 +375,7 @@ class NotionClient:
                         "text": text_property,
                         "url": links,
                         "parent_page_id": parent_page_id,
+                        "FromTask": from_task,
                     }
                 )
 
