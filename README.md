@@ -1,60 +1,80 @@
-# Notion2GoogleTasks 📝➡️📋
+# Notion2GoogleTasks
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/MarcChen/Notion2GoogleTasks/blob/master/LICENSE) [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
+<p align="center">
+  <img src="./demo.gif" alt="Project Demo GIF" width="600">
+</p>
 
-## Table of Contents 📚
-- [Overview](#overview)
-- [Features](#features)
-- [Why Use This?](#why-use-this)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+## Overview
 
-## Overview 🌐
-Notion2GoogleTasks is a tool designed to seamlessly integrate **Notion** with **Google Tasks**, allowing users to synchronize their tasks across these platforms effortlessly. By automating the transfer of data, this application eliminates manual work and enhances productivity.
+**Notion2GoogleTasks** is a bidirectional synchronization engine that keeps your Notion databases and Google Tasks perfectly in sync. Maintain task parity across platforms while leveraging Notion's rich content features and Google Tasks' mobile-friendly interface.
 
-> Note: While there are services like Zapier that offer similar functionality <button class="citation-flag" data-index="4">, our goal is to provide a lightweight, customizable solution tailored specifically for power users who prefer direct control over their integrations.
+## Features
 
-## Features ✨
-- Automatic synchronization between Notion and Google Tasks.
-- Supports bi-directional syncing.
-- Customizable mappings for fields such as titles, descriptions, due dates, etc.
-- Lightweight and easy-to-use interface.
+✨ **Core Functionality**
+- **Bidirectional Sync**
+  - Automatic updates in both directions (Notion ↔ Google Tasks)
+  - Status change propagation (mark complete/incomplete)
+  - Smart conflict resolution (last-modified wins)
+- **Intelligent Matching**
+  - Title-based duplicate prevention
+  - Cross-platform ID tracking
+  - Automatic task list creation from Notion tags
+- **Advanced Configuration**
+  - Customizable Notion query filters (status, dates, properties)
+  - JSON-based filter configuration
+  - Environment-based deployment settings
 
-## Why Use This? 🤔
-If you're looking for a straightforward method to keep your tasks organized across multiple platforms without relying on third-party services, then Notion2GoogleTasks might be exactly what you need! It offers flexibility and customization options not always available through pre-built integrations.
+⚙️ **Technical Capabilities**
+- OAuth2 token management for Google API
+- Notion API pagination handling
+- Config validation with error logging
+- Automatic token refresh handling
 
-## Prerequisites 🔧
-Before getting started, ensure you have the following installed:
-- Python 3.x
-- pip (Python package manager)
-- A Google account with access to Google Tasks API
-- A Notion account with API access enabled
+## Roadmap
 
-## Installation 💻
-To install Notion2GoogleTasks, follow these steps:
+🚀 **Planned Improvements**
+- Webhook integration for real-time updates
+- Custom property mapping configuration
 
-1. Clone the repository: git clone https://github.com/MarcChen/Notion2GoogleTasks.git cd Notion2GoogleTasks
-2. Install dependencies: `poetry install`
-3. Configure your environment variables by copying `..env_template` to `.env` and filling out the necessary credentials.
+## Limitations
 
-## Usage 🚀
-After installation, run the script via command line: `poetry run python main.py` with the exported `.env` vars.
+⚠️ **Current Constraints**
+- Manual/scheduled sync required (no instant updates)
+- Google Tasks API restrictions:
+  - Only supports date-based due dates with note datetime values (no time-specific).
+- Notion API limitations:
+  - Requires specific database schema
+  - Rate limits (3-5 requests per second)
 
-## Configuration ⚙️
-You can adjust various settings within the configuration file (`config.json`) to better suit your notion query preferences.
+## Getting Started
 
-## Contributing 👥
-We welcome contributions from everyone! Whether it's reporting bugs, suggesting improvements, or submitting pull requests, all help is appreciated. Please read our [Contribution Guidelines](CONTRIBUTING.md) before getting started.
+### Prerequisites
 
-## License 📜
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Notion Setup**
+1. Integration token with `read` and `update` permissions
+2. Database with required properties:
+   - `Title` (Text)
+   - `Tags` (Multi-select)
+   - `Due` (Date)
+   - `Status` (Select)
 
-## Acknowledgments 🙏
-Special thanks to the communities behind:
-- [Notion API Documentation](https://developers.notion.com/)
-- [Google Tasks API](https://developers.google.com/tasks/quickstart/python)
+**Google Setup**
+1. OAuth 2.0 Client ID with Tasks API access
+2. Authorized `https://www.googleapis.com/auth/tasks` scope
+
+## Installation and Usage
+For detailed steps, refer to the [Quickstart Guide](./Quickstart.md).
+
+### Requirements
+- **Notion**:
+    - Notion database ID
+    - Query [filter](./services/notion/config/query_payload.json)
+    - API KEY 
+- **Google API**:
+    - OAuth2 client configuration
+    - Access token retrieval
+
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
