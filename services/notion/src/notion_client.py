@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import Dict, List, Optional, Set
 
 import requests
@@ -6,9 +7,7 @@ from rich import print
 
 
 class NotionClient:
-    def __init__(
-        self, notion_api_key: str, database_id: str, project_root: str
-    ):
+    def __init__(self, notion_api_key: str, database_id: str, project_root: str):
         """
         Initialize the NotionClient with API key, database ID, and project root.
 
@@ -59,9 +58,7 @@ class NotionClient:
                     }
                 }
 
-            response = requests.post(
-                url, headers=self.headers, json=query_payload
-            )
+            response = requests.post(url, headers=self.headers, json=query_payload)
             response.raise_for_status()
             return response.json()
 
@@ -95,9 +92,7 @@ class NotionClient:
                 data = response.json()
 
                 title_property = (
-                    data.get("properties", {})
-                    .get("Name", {})
-                    .get("title", None)
+                    data.get("properties", {}).get("Name", {}).get("title", None)
                 )
                 if title_property and len(title_property) > 0:
                     parent_page_names[page_id] = (
@@ -130,17 +125,13 @@ class NotionClient:
                 query_page_ids=[task_id]
             )
         except Exception as e:
-            print(
-                f"[red]Error fetching database to find task ID {task_id}: {e}[/red]"
-            )
+            print(f"[red]Error fetching database to find task ID {task_id}: {e}[/red]")
             return None
 
         parsed_data = self.parse_notion_response(database_response)
         page_status = parsed_data[0].get("page_status", None)
         if page_status == "Done":
-            print(
-                f"[orange1]Task {task_id} is already marked as 'Done'[/orange1]"
-            )
+            print(f"[orange1]Task {task_id} is already marked as 'Done'[/orange1]")
             return None
 
         page_id = parsed_data[0].get("page_id", None)
@@ -155,9 +146,7 @@ class NotionClient:
         try:
             response = requests.patch(url, headers=self.headers, json=payload)
             if response.status_code == 200:
-                print(
-                    f"[green]Task {task_id} marked as 'Done' successfully![/green]"
-                )
+                print(f"[green]Task {task_id} marked as 'Done' successfully![/green]")
                 return response.json()
             else:
                 print(
@@ -169,19 +158,26 @@ class NotionClient:
             print(f"[red]Error marking task {task_id} as 'Done': {e}[/red]")
             return None
 
-    def create_new_page(self, title: str, from_task: bool = False) -> Optional[str]:
+    def create_new_page(
+        self,
+        title: str,
+        tag: str = None,
+        due_date: datetime = None,
+        from_task: bool = False,
+    ) -> Optional[str]:
         """
         Create a new page in the Notion database.
         If from_task is True, sets the FromTask checkbox to True.
-        
+
         Args:
             title (str): The title of the new page.
             from_task (bool): Flag to indicate this page comes from a task.
-        
+
         Returns:
             Optional[str]: The unique page ID if successful; None otherwise.
         """
         url = "https://api.notion.com/v1/pages"
+        # Start with base payload
         payload = {
             "parent": {"database_id": self.database_id},
             "properties": {
@@ -190,6 +186,18 @@ class NotionClient:
                 "FromTask": {"checkbox": from_task},
             },
         }
+
+        # Add Tags only if tag parameter is provided
+        if tag is not None:
+            payload["properties"]["Tags"] = {"multi_select": [{"name": tag}]}
+
+        # Add Due Date only if due_date parameter is provided
+        if due_date is not None:
+            payload["properties"]["Due Date"] = {
+                "date": {
+                    "start": due_date,
+                }
+            }
 
         try:
             response = requests.post(url, headers=self.headers, json=payload)
@@ -219,13 +227,9 @@ class NotionClient:
         Returns:
             List[Dict]: A list of dictionaries containing the task ID and status of each page.
         """
-        database_response = self.get_filtered_sorted_database(
-            query_page_ids=tasks_id
-        )
+        database_response = self.get_filtered_sorted_database(query_page_ids=tasks_id)
         if not database_response:
-            print(
-                "[red]Failed to fetch database to retrieve pages status.[/red]"
-            )
+            print("[red]Failed to fetch database to retrieve pages status.[/red]")
             return []
 
         parsed_data = self.parse_notion_response(database_response)
@@ -275,41 +279,27 @@ class NotionClient:
                 )
 
                 unique_id = (
-                    properties.get("ID", {})
-                    .get("unique_id", {})
-                    .get("number", None)
+                    properties.get("ID", {}).get("unique_id", {}).get("number", None)
                 )
 
-                due_date_property = properties.get("Due Date", {}).get(
-                    "date", None
-                )
+                due_date_property = properties.get("Due Date", {}).get("date", None)
                 due_date = (
-                    due_date_property.get("start", None)
-                    if due_date_property
-                    else None
+                    due_date_property.get("start", None) if due_date_property else None
                 )
 
                 page_url = page.get("url", None)
 
-                estimates_property = properties.get("Estimates", {}).get(
-                    "select", None
-                )
+                estimates_property = properties.get("Estimates", {}).get("select", None)
                 estimates = (
-                    estimates_property.get("name", None)
-                    if estimates_property
-                    else None
+                    estimates_property.get("name", None) if estimates_property else None
                 )
 
                 title = properties.get("Name", {}).get("title", None)
                 title_text = (
-                    title[0]["text"]["content"]
-                    if title and len(title) > 0
-                    else None
+                    title[0]["text"]["content"] if title and len(title) > 0 else None
                 )
 
-                text_property = properties.get("Text", {}).get(
-                    "rich_text", None
-                )
+                text_property = properties.get("Text", {}).get("rich_text", None)
                 text_property = (
                     text_property[0].get("text", {}).get("content", None)
                     if text_property and len(text_property) > 0
@@ -331,29 +321,17 @@ class NotionClient:
                 laste_edited_time = page.get("last_edited_time", None)
                 created_time = page.get("created_time", None)
 
-                parent_page_id = properties.get("Parent item", {}).get(
-                    "relation", None
-                )
+                parent_page_id = properties.get("Parent item", {}).get("relation", None)
                 if parent_page_id and len(parent_page_id) > 0:
-                    parent_page_id = (
-                        parent_page_id[0].get("id", "").replace("-", "")
-                    )
+                    parent_page_id = parent_page_id[0].get("id", "").replace("-", "")
                 else:
                     parent_page_id = None
 
-                status_property = properties.get("Status", {}).get(
-                    "status", None
-                )
-                status = (
-                    status_property.get("name", None)
-                    if status_property
-                    else None
-                )
+                status_property = properties.get("Status", {}).get("status", None)
+                status = status_property.get("name", None) if status_property else None
 
                 task_id = (
-                    properties.get("ID", {})
-                    .get("unique_id", {})
-                    .get("number", None)
+                    properties.get("ID", {}).get("unique_id", {}).get("number", None)
                 )
                 # Extract "FromTask" checkbox from properties.
                 from_task = properties.get("FromTask", {}).get("checkbox", False)
@@ -380,9 +358,7 @@ class NotionClient:
                 )
 
             parent_page_ids: Set[str] = {
-                item["parent_page_id"]
-                for item in parsed_data
-                if item["parent_page_id"]
+                item["parent_page_id"] for item in parsed_data if item["parent_page_id"]
             }
             parent_page_names = self.fetch_parent_page_names(parent_page_ids)
 
