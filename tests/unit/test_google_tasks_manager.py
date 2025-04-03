@@ -15,9 +15,7 @@ def mock_manager():
     ) as mock_creds:
         # Mock credentials with expected universe_domain
         mock_creds.return_value = MagicMock(universe_domain="googleapis.com")
-        with patch(
-            "services.google_task.src.retrieve_tasks.build"
-        ) as mock_build:
+        with patch("services.google_task.src.retrieve_tasks.build") as mock_build:
             # Mock the Google Tasks service
             mock_service = MagicMock()
             mock_build.return_value = mock_service
@@ -124,6 +122,7 @@ def test_get_created_tasks_since(mock_manager):
                 "status": "needsAction",
                 "completed": None,
                 "updated": "2023-11-05T12:00:00Z",
+                "due": "2023-11-10T12:00:00Z",
             },
             {
                 "title": "Task 2",
@@ -131,6 +130,7 @@ def test_get_created_tasks_since(mock_manager):
                 "status": "completed",
                 "completed": "2023-11-06T12:00:00Z",
                 "updated": "2023-11-06T12:00:00Z",
+                "due": "2023-11-08T12:00:00Z",
             },
             {
                 "title": "Task 3",
@@ -138,6 +138,7 @@ def test_get_created_tasks_since(mock_manager):
                 "status": "needsAction",
                 "completed": None,
                 "updated": "2023-11-07T12:00:00Z",
+                "due": None,
             },
         ]
     }
@@ -152,18 +153,21 @@ def test_get_created_tasks_since(mock_manager):
             "status": "needsAction",
             "completed": None,
             "updated": "2023-11-05T12:00:00Z",
+            "due": "2023-11-10T12:00:00Z",
         },
         "Task 2": {
             "id": "2",
             "status": "completed",
             "completed": "2023-11-06T12:00:00Z",
             "updated": "2023-11-06T12:00:00Z",
+            "due": "2023-11-08T12:00:00Z",
         },
         "Task 3": {
             "id": "3",
             "status": "needsAction",
             "completed": None,
             "updated": "2023-11-07T12:00:00Z",
+            "due": None,
         },
     }
 
@@ -177,11 +181,13 @@ def test_get_created_tasks_since(mock_manager):
             "status": "needsAction",
             "completed": None,
             "updated": "2023-11-05T12:00:00Z",
+            "due": "2023-11-10T12:00:00Z",
         },
         "Task 3": {
             "id": "3",
             "status": "needsAction",
             "completed": None,
             "updated": "2023-11-07T12:00:00Z",
+            "due": None,
         },
     }

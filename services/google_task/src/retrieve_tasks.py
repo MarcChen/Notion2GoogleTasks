@@ -160,9 +160,7 @@ class GoogleTasksManager:
         """
         try:
             task = (
-                self.service.tasks()
-                .get(tasklist=tasklist_id, task=task_id)
-                .execute()
+                self.service.tasks().get(tasklist=tasklist_id, task=task_id).execute()
             )
             return {
                 "title": task.get("title", "No Title"),
@@ -347,6 +345,7 @@ class GoogleTasksManager:
                     "status": task.get("status"),
                     "completed": task.get("completed"),
                     "updated": task.get("updated"),
+                    "due": task.get("due"),
                 }
                 for task in filtered_tasks
             }
