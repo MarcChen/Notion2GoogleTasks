@@ -200,13 +200,13 @@ class NotionToGoogleTaskSyncer:
         today = datetime.now(dt.timezone.utc)
 
         if due_date_str:
-            due_date = datetime.fromisoformat(due_date_str)
+            due_date = dt.datetime.fromisoformat(due_date_str)
             if due_date.tzinfo is None:
                 due_date = due_date.replace(tzinfo=dt.timezone.utc)
         else:
             due_date = today
 
-        # Adjust the due date if it's more than 14 days from today
+        # Adjust the due date if it's more than 21 days from today
         if (due_date - today).days > 21:
             due_date = today
 
