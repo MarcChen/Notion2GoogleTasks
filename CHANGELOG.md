@@ -206,3 +206,18 @@ This pull request includes several formatting improvements and functional enhanc
 * [`services/notion/src/notion_client.py`](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bL172-R167): Added `tag` and `due_date` parameters to the `create_new_page` method, allowing for more detailed task creation. [[1]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bL172-R167) [[2]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR180) [[3]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR190-R201)
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L288-R273): Updated `sync_pages_to_google_tasks` and `sync_google_tasks_to_notion` methods to handle the new `tag` and `due_date` parameters, and to print task due dates for better tracking. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L288-R273) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L304-R283)
 
+## [2.1.1] - 2025-04-05
+- Merged PR #31 by @MarcChen: fix datetime type issue
+This pull request includes several changes to the `services/sync_notion_google_task/main.py` file, focusing on improving date handling and cleaning up the code. The most important changes are listed below:
+
+Improvements to date handling:
+
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R3): Imported `datetime` as `dt` to avoid naming conflicts and improve code readability.
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L199-R210): Changed `datetime.utcnow()` to `datetime.now(dt.timezone.utc)` to ensure the use of timezone-aware datetime objects.
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L199-R210): Added logic to set the timezone to UTC if the `due_date` is naive (i.e., lacks timezone information).
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L199-R210): Adjusted the due date threshold from 14 days to 21 days to provide more flexibility.
+
+Code cleanup:
+
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L272-L273): Removed an unnecessary print statement that displayed the task due date.
+
