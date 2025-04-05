@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Optional
+import datetime as dt
 
 from rich import print
 from rich.console import Console
@@ -196,15 +197,17 @@ class NotionToGoogleTaskSyncer:
         Returns:
             datetime: The adjusted due date as a `datetime` object.
         """
-        today = datetime.utcnow()
+        today = datetime.now(dt.timezone.utc)
 
         if due_date_str:
             due_date = datetime.fromisoformat(due_date_str)
+            if due_date.tzinfo is None:
+                due_date = due_date.replace(tzinfo=dt.timezone.utc)
         else:
-            due_date = today  # Default to today if no due date is provided
+            due_date = today
 
         # Adjust the due date if it's more than 14 days from today
-        if (due_date - today).days > 14:
+        if (due_date - today).days > 21:
             due_date = today
 
         return due_date
@@ -268,8 +271,6 @@ class NotionToGoogleTaskSyncer:
                         potential_notion_id = self.extract_page_id_from_task_title(
                             task_title
                         )
-
-                        print(f"Task due {task_due}")
 
                         if potential_notion_id:
                             if is_completed:
