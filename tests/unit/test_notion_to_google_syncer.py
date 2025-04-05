@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import datetime as dt
 from unittest.mock import patch
 
 import pytest
@@ -77,39 +78,36 @@ def test_build_task_description(mock_syncer):
 def test_compute_due_date(mock_syncer):
     syncer, _, _ = mock_syncer
 
+    now_utc = datetime.now(dt.timezone.utc)
+
     # Test case: due_date is None
     due_date = syncer.compute_due_date(None)
-    assert due_date.date() == datetime.utcnow().date()
+    assert due_date.date() == now_utc.date()
 
-    # Test case: due_date exceeds 14 days
-    future_date = (datetime.utcnow() + timedelta(days=20)).isoformat()
+    # Test case: due_date exceeds 21 days
+    future_date = (now_utc + timedelta(days=30)).isoformat()
     adjusted_date = syncer.compute_due_date(future_date)
-    assert adjusted_date.date() == datetime.utcnow().date()
+    assert adjusted_date.date() == now_utc.date()
 
-    # Test case: due_date within 14 days
-    valid_date = (datetime.utcnow() + timedelta(days=10)).isoformat()
+    # Test case: due_date within 21 days
+    valid_date = (now_utc + timedelta(days=10)).isoformat()
     computed_date = syncer.compute_due_date(valid_date)
-    assert (
-        computed_date.date() == (datetime.utcnow() + timedelta(days=10)).date()
-    )
+    assert computed_date.date() == (now_utc + timedelta(days=10)).date()
 
     # Test case: Invalid date string
     with pytest.raises(ValueError):
         syncer.compute_due_date("invalid-date")
 
     # Test case: Past date
-    past_date = (datetime.utcnow() - timedelta(days=5)).isoformat()
+    past_date = (now_utc - timedelta(days=5)).isoformat()
     computed_date = syncer.compute_due_date(past_date)
-    assert (
-        computed_date.date() == (datetime.utcnow() - timedelta(days=5)).date()
-    )
+    assert computed_date.date() == (now_utc - timedelta(days=5)).date()
 
-    # Test case: Exact 14 days
-    exact_14_days = (datetime.utcnow() + timedelta(days=14)).isoformat()
-    computed_date = syncer.compute_due_date(exact_14_days)
-    assert (
-        computed_date.date() == (datetime.utcnow() + timedelta(days=14)).date()
-    )
+    # Test case: Exact 21 days
+    exact_21_days = (now_utc + timedelta(days=21)).isoformat()
+    computed_date = syncer.compute_due_date(exact_21_days)
+    assert computed_date.date() == (now_utc + timedelta(days=21)).date()
+
 
 
 def test_task_exists(mock_syncer):
