@@ -59,6 +59,7 @@ class NotionToGoogleTaskSyncer:
                 importance = page["importance"]
                 text = page["text"]
                 urls = page["url"]
+                page_url = page["page_url"]
                 parent_page_name = page["parent_page_name"] or None
 
                 console.print(f"[bold]Processing Page ID: {page_id}[/bold]")
@@ -87,7 +88,7 @@ class NotionToGoogleTaskSyncer:
 
                 try:
                     task_description = self.build_task_description(
-                        importance, text, urls, due_date
+                        importance, text, urls, page_url, due_date
                     )
                 except Exception as e:
                     console.print(f"[red]Error building task description: {e}[/red]")
@@ -159,6 +160,7 @@ class NotionToGoogleTaskSyncer:
         importance: Optional[str],
         text: Optional[str],
         urls: Optional[List[str]],
+        page_url: Optional[str],
         due_date: Optional[str],
     ) -> str:
         """
@@ -168,12 +170,15 @@ class NotionToGoogleTaskSyncer:
             importance (Optional[str]): The importance level of the task.
             text (Optional[str]): The text content from the Notion page.
             urls (Optional[List[str]]): A list of URLs from the Notion page.
+            page_url (Optional[List[str]]): Notion page URL.
             due_date (Optional[str]): The due date of the task.
 
         Returns:
             str: The task description.
         """
         description_lines = []
+        if page_url:
+            description_lines.append(f"Page URL: {page_url}")
         if importance:
             description_lines.append(f"Importance: {importance}")
         if text:
