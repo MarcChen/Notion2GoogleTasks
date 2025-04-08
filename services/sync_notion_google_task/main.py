@@ -170,6 +170,7 @@ class NotionToGoogleTaskSyncer:
             importance (Optional[str]): The importance level of the task.
             text (Optional[str]): The text content from the Notion page.
             urls (Optional[List[str]]): A list of URLs from the Notion page.
+            page_url (Optional[List[str]]): Notion page URL.
             due_date (Optional[str]): The due date of the task.
 
         Returns:
