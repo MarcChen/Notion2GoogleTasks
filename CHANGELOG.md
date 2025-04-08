@@ -221,3 +221,12 @@ Code cleanup:
 
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L272-L273): Removed an unnecessary print statement that displayed the task due date.
 
+## [2.2.0] - 2025-04-08
+- Merged PR #32 by @MarcChen: feature : adding notion url page to task if existing
+This pull request includes changes to the `services/sync_notion_google_task/main.py` file to enhance the synchronization of pages to Google Tasks. The most important changes include adding a new field `page_url` to the task description and ensuring it is processed correctly.
+
+Enhancements to task synchronization:
+
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R62): Added the `page_url` field to the `sync_pages_to_google_tasks` method to capture the URL of the page being processed.
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R163): Updated the `build_task_description` method to include the `page_url` parameter in the task description. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R163) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R187-R188)
+
