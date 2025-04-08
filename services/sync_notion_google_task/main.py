@@ -59,6 +59,7 @@ class NotionToGoogleTaskSyncer:
                 importance = page["importance"]
                 text = page["text"]
                 urls = page["url"]
+                page_url = page["page_url"]
                 parent_page_name = page["parent_page_name"] or None
 
                 console.print(f"[bold]Processing Page ID: {page_id}[/bold]")
@@ -159,6 +160,7 @@ class NotionToGoogleTaskSyncer:
         importance: Optional[str],
         text: Optional[str],
         urls: Optional[List[str]],
+        page_url: Optional[str],
         due_date: Optional[str],
     ) -> str:
         """
@@ -182,6 +184,8 @@ class NotionToGoogleTaskSyncer:
             description_lines.append("Links:")
             for url in urls:
                 description_lines.append(f" - {url}")
+        if page_url:
+            description_lines.append(f"Page URL: {page_url}")
         if due_date:
             due_date = datetime.fromisoformat(due_date)
             description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
