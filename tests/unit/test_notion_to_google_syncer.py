@@ -37,31 +37,32 @@ def test_build_task_description(mock_syncer):
     importance = "High"
     text = "Complete the report"
     urls = ["http://example.com", "http://example.org"]
+    page_url = "http://example.com/page"
     due_date = (
         datetime.utcnow() + timedelta(days=7)
-    ).isoformat()  # Adjusted to a string type
+    ).isoformat()
 
     description = syncer.build_task_description(
-        importance, text, urls, due_date
+        importance, text, urls, page_url, due_date
     )
 
     assert "Importance: High" in description
     assert "Details: Complete the report" in description
     assert "Links:" in description
     assert " - http://example.com" in description
-    assert " - http://example.org" in description
+    assert "Page URL: http://example.com/page" in description 
     assert (
         f"Due Date: {datetime.fromisoformat(due_date).strftime('%d-%m-%y')}"
         in description
     )
 
     # Test case: Missing fields
-    description = syncer.build_task_description(None, None, None, None)
+    description = syncer.build_task_description(None, None, None, None, None)
     assert description == ""  # Should handle missing data gracefully
 
     # Test case: Empty URLs list
     description = syncer.build_task_description(
-        "Medium", "Some text", [], due_date
+        "Medium", "Some text", [], page_url, due_date
     )
     assert "Importance: Medium" in description
     assert "Details: Some text" in description
@@ -70,7 +71,7 @@ def test_build_task_description(mock_syncer):
     # Test case: Very long text
     long_text = "A" * 1000  # Simulating a very long task description
     description = syncer.build_task_description(
-        "Low", long_text, urls, due_date
+        "Low", long_text, urls, page_url, due_date
     )
     assert long_text in description  # Ensure the full text is included
 
