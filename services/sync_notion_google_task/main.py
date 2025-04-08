@@ -88,7 +88,7 @@ class NotionToGoogleTaskSyncer:
 
                 try:
                     task_description = self.build_task_description(
-                        importance, text, urls, due_date
+                        importance, text, urls, page_url, due_date
                     )
                 except Exception as e:
                     console.print(f"[red]Error building task description: {e}[/red]")
@@ -177,6 +177,8 @@ class NotionToGoogleTaskSyncer:
             str: The task description.
         """
         description_lines = []
+        if page_url:
+            description_lines.append(f"Page URL: {page_url}")
         if importance:
             description_lines.append(f"Importance: {importance}")
         if text:
@@ -185,8 +187,6 @@ class NotionToGoogleTaskSyncer:
             description_lines.append("Links:")
             for url in urls:
                 description_lines.append(f" - {url}")
-        if page_url:
-            description_lines.append(f"Page URL: {page_url}")
         if due_date:
             due_date = datetime.fromisoformat(due_date)
             description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
