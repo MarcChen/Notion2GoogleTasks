@@ -194,7 +194,7 @@ class NotionToGoogleTaskSyncer:
 
     def compute_due_date(self, due_date_str: Optional[str]) -> datetime:
         """
-        Computes the due date, adjusting it to today if the difference exceeds 14 days.
+        Computes the due date, adjusting it to today if the difference exceeds 1 year.
 
         Args:
             due_date_str (Optional[str]): The due date as a string in ISO format, or None.
@@ -205,17 +205,20 @@ class NotionToGoogleTaskSyncer:
         today = datetime.now(dt.timezone.utc)
 
         if due_date_str:
-            due_date = dt.datetime.fromisoformat(due_date_str)
+            due_date = datetime.fromisoformat(due_date_str)
             if due_date.tzinfo is None:
                 due_date = due_date.replace(tzinfo=dt.timezone.utc)
+            
+            # Calculate the difference in days
+            days_difference = (due_date - today).days
+            
+            # Adjust the due date if it's more than 365 days from today
+            if days_difference >= 365:
+                return today
+            else:
+                return due_date
         else:
-            due_date = today
-
-        # Adjust the due date if it's more than 21 days from today
-        if (due_date - today).days > 21:
-            due_date = today
-
-        return due_date
+            return today
 
     def extract_page_id_from_task_title(self, task_title: str) -> Optional[int]:
         """
