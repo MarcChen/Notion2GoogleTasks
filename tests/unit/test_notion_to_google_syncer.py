@@ -50,7 +50,7 @@ def test_build_task_description(mock_syncer):
     assert "Details: Complete the report" in description
     assert "Links:" in description
     assert " - http://example.com" in description
-    assert "Page URL: http://example.com/page" in description 
+    assert "Page URL: http://example.com/page" in description
     assert (
         f"Due Date: {datetime.fromisoformat(due_date).strftime('%d-%m-%y')}"
         in description
@@ -85,15 +85,15 @@ def test_compute_due_date(mock_syncer):
     due_date = syncer.compute_due_date(None)
     assert due_date.date() == now_utc.date()
 
-    # Test case: due_date exceeds 21 days
-    future_date = (now_utc + timedelta(days=30)).isoformat()
+    # Test case: due_date exceeds 1 year
+    future_date = (now_utc + timedelta(days=367)).isoformat()
     adjusted_date = syncer.compute_due_date(future_date)
     assert adjusted_date.date() == now_utc.date()
 
-    # Test case: due_date within 21 days
-    valid_date = (now_utc + timedelta(days=10)).isoformat()
+    # Test case: due_date within 1 year
+    valid_date = (now_utc + timedelta(days=300)).isoformat()
     computed_date = syncer.compute_due_date(valid_date)
-    assert computed_date.date() == (now_utc + timedelta(days=10)).date()
+    assert computed_date.date() == (now_utc + timedelta(days=300)).date()
 
     # Test case: Invalid date string
     with pytest.raises(ValueError):
@@ -104,11 +104,15 @@ def test_compute_due_date(mock_syncer):
     computed_date = syncer.compute_due_date(past_date)
     assert computed_date.date() == (now_utc - timedelta(days=5)).date()
 
-    # Test case: Exact 21 days
-    exact_21_days = (now_utc + timedelta(days=21)).isoformat()
-    computed_date = syncer.compute_due_date(exact_21_days)
-    assert computed_date.date() == (now_utc + timedelta(days=21)).date()
+    # Test case: Exact 1 year
+    exact_365_days = (now_utc + timedelta(days=365)).isoformat()
+    computed_date = syncer.compute_due_date(exact_365_days)
+    assert computed_date.date() == (now_utc + timedelta(days=365)).date()
 
+    # Test case: Date without timezone
+    naive_date = datetime.now() + timedelta(days=10)
+    computed_date = syncer.compute_due_date(naive_date.isoformat())
+    assert computed_date.date() == naive_date.date()
 
 
 def test_task_exists(mock_syncer):
