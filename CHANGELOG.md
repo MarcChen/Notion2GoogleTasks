@@ -230,3 +230,16 @@ Enhancements to task synchronization:
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R62): Added the `page_url` field to the `sync_pages_to_google_tasks` method to capture the URL of the page being processed.
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R163): Updated the `build_task_description` method to include the `page_url` parameter in the task description. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R163) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R187-R188)
 
+## [2.2.1] - 2025-04-11
+- Merged PR #33 by @MarcChen: adjusted recompute due date (treshold from 21 to 365)
+This pull request includes changes to the `compute_due_date` method in `services/sync_notion_google_task/main.py` and its corresponding unit tests in `tests/unit/test_notion_to_google_syncer.py`. The primary change is adjusting the due date threshold from 21 days to 1 year.
+
+Changes to the `compute_due_date` method:
+
+* Updated the due date adjustment logic to set the due date to today if it exceeds 1 year instead of 21 days. [[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L197-R197) [[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L208-R221)
+
+Updates to unit tests:
+
+* Modified test cases to reflect the new 1-year threshold for due date adjustments. [[1]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL88-R96) [[2]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL107-R115)
+* Added a new test case to handle dates without timezone information.
+
