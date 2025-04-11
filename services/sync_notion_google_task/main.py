@@ -213,7 +213,7 @@ class NotionToGoogleTaskSyncer:
             days_difference = (due_date - today).days
             
             # Adjust the due date if it's more than 365 days from today
-            if days_difference >= 365:
+            if days_difference > 365:
                 return today
             else:
                 return due_date

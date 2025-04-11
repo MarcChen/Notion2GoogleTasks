@@ -86,7 +86,7 @@ def test_compute_due_date(mock_syncer):
     assert due_date.date() == now_utc.date()
 
     # Test case: due_date exceeds 1 year
-    future_date = (now_utc + timedelta(days=366)).isoformat()
+    future_date = (now_utc + timedelta(days=367)).isoformat()
     adjusted_date = syncer.compute_due_date(future_date)
     assert adjusted_date.date() == now_utc.date()
 
