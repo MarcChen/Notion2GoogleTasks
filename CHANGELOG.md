@@ -243,3 +243,19 @@ Updates to unit tests:
 * Modified test cases to reflect the new 1-year threshold for due date adjustments. [[1]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL88-R96) [[2]](diffhunk://#diff-ae32bc452849d064a1b9c50ca3ab1c54dffd8610b3b2b610dc56ab68c9497f6aL107-R115)
 * Added a new test case to handle dates without timezone information.
 
+## [2.3.0] - 2025-05-25
+- Merged PR #34 by @MarcChen: Add functionality to find parent page by name and extract parent page…
+This pull request introduces functionality to associate tasks with parent pages in Notion based on task titles, along with minor fixes and improvements. The key updates include adding a method to find parent pages by name, extending task creation to support parent page relationships, and improving task title parsing for parent page extraction.
+
+### New functionality for parent page association:
+* [`services/notion/src/notion_client.py`](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR110-R153): Added `find_parent_page_by_name` method to search for a parent page ID by name in Notion. This method ensures case-insensitive matching and handles errors gracefully.
+* [`services/notion/src/notion_client.py`](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bL164-R222): Updated `create_new_page` to accept an optional `parent_page_id` parameter and include it in the payload if provided. [[1]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bL164-R222) [[2]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR250-R255)
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R238-R265): Added `extract_parent_page_from_task_title` method to parse task titles for parent page references in the format "title - parent_page_name".
+
+### Integration of parent page logic in task synchronization:
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R318-R348): Enhanced task synchronization to check for parent page references in task titles, retrieve the corresponding parent page ID, and pass it to the `create_new_page` method. Tasks without a matching parent page proceed without a parent relationship.
+
+### Minor fixes:
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L339-R393): Corrected a typo in the `sms_alert` attribute name, fixing a potential runtime error.
+* [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R1-L3): Adjusted import order for `datetime` to improve code readability.… from task title
+
