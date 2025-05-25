@@ -107,6 +107,50 @@ class NotionClient:
 
         return parent_page_names
 
+    def find_parent_page_by_name(self, parent_name: str) -> Optional[str]:
+        """
+        Finds a parent page ID by searching for a page with the given name.
+
+        Args:
+            parent_name (str): The name of the parent page to search for.
+
+        Returns:
+            Optional[str]: The parent page ID if found, None otherwise.
+        """
+        url = f"https://api.notion.com/v1/search"
+        payload = {
+            "query": parent_name,
+            "filter": {"value": "page", "property": "object"},
+        }
+
+        try:
+            response = requests.post(url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+            results = data.get("results", [])
+            for result in results:
+                if result.get("object") == "page":
+                    # Check if the page title matches exactly
+                    properties = result.get("properties", {})
+                    title_property = properties.get("Name", {}).get(
+                        "title", None
+                    ) or properties.get("title", {}).get("title", None)
+
+                    if title_property and len(title_property) > 0:
+                        page_title = (
+                            title_property[0].get("text", {}).get("content", "")
+                        )
+                        if page_title.lower() == parent_name.lower():
+                            return result.get("id", "").replace("-", "")
+
+            print(f"[yellow]Parent page '{parent_name}' not found[/yellow]")
+            return None
+
+        except requests.exceptions.RequestException as e:
+            print(f"[red]Error searching for parent page '{parent_name}': {e}[/red]")
+            return None
+
     def mark_page_as_completed(self, task_id: int) -> Optional[Dict]:
         """
         Marks the 'Status' property of a Notion page as 'Done' based on the task ID.
@@ -161,9 +205,10 @@ class NotionClient:
     def create_new_page(
         self,
         title: str,
-        tag: str = None,
-        due_date: datetime = None,
+        tag: Optional[str] = None,
+        due_date: Optional[datetime] = None,
         from_task: bool = False,
+        parent_page_id: Optional[str] = None,
     ) -> Optional[str]:
         """
         Create a new page in the Notion database.
@@ -171,7 +216,10 @@ class NotionClient:
 
         Args:
             title (str): The title of the new page.
+            tag (Optional[str]): The tag for the new page.
+            due_date (Optional[datetime]): The due date for the new page.
             from_task (bool): Flag to indicate this page comes from a task.
+            parent_page_id (Optional[str]): The ID of the parent page to link to.
 
         Returns:
             Optional[str]: The unique page ID if successful; None otherwise.
@@ -197,6 +245,12 @@ class NotionClient:
                 "date": {
                     "start": due_date,
                 }
+            }
+
+        # Add Parent item relation only if parent_page_id parameter is provided
+        if parent_page_id is not None:
+            payload["properties"]["Parent item"] = {
+                "relation": [{"id": parent_page_id}]
             }
 
         try:
