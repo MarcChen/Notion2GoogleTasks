@@ -1,6 +1,6 @@
+import datetime as dt
 from datetime import datetime
 from typing import Dict, List, Optional
-import datetime as dt
 
 from rich import print
 from rich.console import Console
@@ -208,10 +208,10 @@ class NotionToGoogleTaskSyncer:
             due_date = datetime.fromisoformat(due_date_str)
             if due_date.tzinfo is None:
                 due_date = due_date.replace(tzinfo=dt.timezone.utc)
-            
+
             # Calculate the difference in days
             days_difference = (due_date - today).days
-            
+
             # Adjust the due date if it's more than 365 days from today
             if days_difference > 365:
                 return today
@@ -234,6 +234,34 @@ class NotionToGoogleTaskSyncer:
             except ValueError:
                 return None
         return None
+
+    def extract_parent_page_from_task_title(
+        self, task_title: str
+    ) -> tuple[str, Optional[str]]:
+        """
+        Extracts parent page name from task title if it contains the format "title - parent_page_name".
+        Properly handles parent page names that contain hyphens.
+
+        Args:
+            task_title (str): The title of the Google Task.
+
+        Returns:
+            tuple[str, Optional[str]]: A tuple of (cleaned_title, parent_page_name).
+            cleaned_title is the task title without the parent page reference.
+            parent_page_name is the extracted parent page name or None if not found.
+        """
+        # Look for the first occurrence of " - " as the separator between title and parent
+        # This preserves any hyphens in the parent page name
+        separator_index = task_title.find(" - ")
+
+        if separator_index != -1:
+            # Title has format "title - parent_page_name"
+            cleaned_title = task_title[:separator_index].strip()
+            parent_page_name = task_title[separator_index + 3 :].strip()
+            return cleaned_title, parent_page_name
+
+        # No parent page reference found
+        return task_title, None
 
     # Method to sync completed Google Tasks to Notion #
 
@@ -287,11 +315,37 @@ class NotionToGoogleTaskSyncer:
                                 )
                             continue
 
+                        # Check if task title contains parent page reference
+                        cleaned_title, parent_page_name = (
+                            self.extract_parent_page_from_task_title(task_title)
+                        )
+                        parent_page_id = None
+
+                        if parent_page_name:
+                            # Find the parent page ID by name
+                            parent_page_id = (
+                                self.notion_client.find_parent_page_by_name(
+                                    parent_page_name
+                                )
+                            )
+                            if parent_page_id:
+                                print(
+                                    f"[green]Found parent page '{parent_page_name}' with ID: {parent_page_id}[/green]"
+                                )
+                            else:
+                                print(
+                                    f"[yellow]Parent page '{parent_page_name}' not found, creating task without parent[/yellow]"
+                                )
+
                         # Create new Notion page with FromTask checkbox = True
                         notion_page_id = self.notion_client.create_new_page(
-                            task_title, tasklist_name, task_due, from_task=True
+                            cleaned_title,
+                            tasklist_name,
+                            task_due,
+                            from_task=True,
+                            parent_page_id=parent_page_id,
                         )
-                        updated_title = f"{task_title} | ({notion_page_id})"
+                        updated_title = f"{cleaned_title} | ({notion_page_id})"
                         self.google_tasks_manager.modify_task_title(
                             tasklist_id=tasklist_id,
                             task_id=task_id,
@@ -336,7 +390,7 @@ class NotionToGoogleTaskSyncer:
                         self.notion_client.mark_page_as_completed(notion_page_id)
                     except Exception as e:
                         print(f"[red]Error updating completed task: {e}[/red]")
-                        self.sms_alert.send_sms(
+                        self.sms_altert.send_sms(
                             f"Error updating completed task: {str(e)[:50]}"
                         )
                         continue
