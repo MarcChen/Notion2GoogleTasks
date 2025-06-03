@@ -78,3 +78,13 @@ For detailed steps, refer to the [Quickstart Guide](./Quickstart.md).
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+## Sync Overview Diagram
+
+```mermaid
+flowchart TD
+    A[Notion Database] -- Updates --> B(Sync Engine)
+    B -- Creates/Updates --> C[Google Tasks]
+    C -- Completed Tasks --> B
+    B -- Mark Done --> A
+```

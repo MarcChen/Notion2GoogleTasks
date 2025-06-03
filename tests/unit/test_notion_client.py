@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from unittest.mock import MagicMock, mock_open, patch
 
 from services.notion.src.notion_client import NotionClient
@@ -55,6 +56,28 @@ class TestNotionClient:
 
         assert response is not None
         assert response["results"][0]["id"] == "page_1"
+
+    @patch("requests.post")
+    def test_get_filtered_sorted_database_with_last_edited(self, mock_post):
+        """Test get_filtered_sorted_database with last_edited_since filter."""
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = MOCK_NOTION_RESPONSE
+
+        with patch(
+            "builtins.open",
+            mock_open(read_data=json.dumps({"filter": {}, "sort": []})),
+        ):
+            ts = datetime(2023, 1, 1, 0, 0, 0)
+            response = self.notion_client.get_filtered_sorted_database(
+                last_edited_since=ts
+            )
+
+        assert response is not None
+        sent_payload = mock_post.call_args.kwargs["json"]
+        assert "filter" in sent_payload
+        assert any(
+            f.get("timestamp") == "last_edited_time" for f in sent_payload["filter"]["and"]
+        )
 
     @patch("requests.get")
     def test_fetch_parent_page_names(self, mock_get):

@@ -28,11 +28,14 @@ class NotionToGoogleTaskSyncer:
 
     # Method to sync Notion pages to Google Tasks
 
-    def sync_pages_to_google_tasks(self):
+    def sync_pages_to_google_tasks(self, last_successful_sync: datetime):
         """
         Synchronizes Notion pages to Google Tasks with a progress bar that remains at the top.
+        Only pages edited since ``last_successful_sync`` are processed.
         """
-        notion_pages = self.notion_client.get_filtered_sorted_database()
+        notion_pages = self.notion_client.get_filtered_sorted_database(
+            last_edited_since=last_successful_sync
+        )
         if not notion_pages:
             print("[red]No pages retrieved from Notion.[/red]")
             return

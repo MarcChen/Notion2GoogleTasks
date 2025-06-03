@@ -26,13 +26,17 @@ class NotionClient:
         }
 
     def get_filtered_sorted_database(
-        self, query_page_ids: List[int] = [-1]
+        self,
+        query_page_ids: List[int] = [-1],
+        last_edited_since: Optional[datetime] = None,
     ) -> Optional[Dict]:
         """
         Fetches the database information from Notion with specified filters and sorting.
         Args:
             query_page_ids (List[int], optional): A list of page IDs to filter the database query.
                                                   Defaults to [-1], which loads the default query payload from a JSON file.
+            last_edited_since (Optional[datetime], optional): Only return pages edited on or after this timestamp.
+                                                             Defaults to ``None``.
         Returns:
             Optional[Dict]: The JSON response from the Notion API if the request is successful; None otherwise.
         """
@@ -57,6 +61,18 @@ class NotionClient:
                         ]
                     }
                 }
+
+            if last_edited_since is not None:
+                last_edit_filter = {
+                    "timestamp": "last_edited_time",
+                    "last_edited_time": {"on_or_after": last_edited_since.isoformat()},
+                }
+                if "filter" in query_payload:
+                    query_payload["filter"] = {
+                        "and": [query_payload["filter"], last_edit_filter]
+                    }
+                else:
+                    query_payload["filter"] = last_edit_filter
 
             response = requests.post(url, headers=self.headers, json=query_payload)
             response.raise_for_status()
