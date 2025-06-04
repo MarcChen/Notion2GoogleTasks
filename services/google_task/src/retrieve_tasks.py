@@ -4,9 +4,7 @@ from typing import Any, Dict, Optional
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from services.google_task.src.authentification import (load_credentials,
-                                                       print_token_ttl,
-                                                       refresh_access_token)
+from services.google_task.src.authentification import CredentialsManager
 
 
 class GoogleTasksManager:
@@ -22,7 +20,8 @@ class GoogleTasksManager:
             token_path (str): Path to the token file.
         """
         self.token_path: str = token_path
-        self.credentials: Credentials = self._get_credentials()
+        self.auth_manager = CredentialsManager(token_path)
+        self.credentials: Credentials = self.auth_manager.refresh_if_needed()
         self.service = build("tasks", "v1", credentials=self.credentials)
 
     def _get_credentials(self) -> Credentials:
@@ -32,8 +31,8 @@ class GoogleTasksManager:
         Returns:
             google.oauth2.credentials.Credentials: Authorized credentials object.
         """
-        credentials = load_credentials(self.token_path)
-        return refresh_access_token(credentials, self.token_path)
+        # Keep for backward compatibility
+        return self.auth_manager.refresh_if_needed()
 
     def list_task_lists(self) -> Dict[str, str]:
         """
@@ -43,7 +42,7 @@ class GoogleTasksManager:
             dict: A dictionary with task list titles as keys and their IDs as values.
         """
         try:
-            print_token_ttl(self.credentials)
+            self.auth_manager.token_ttl()
             tasklists = self.service.tasklists().list().execute()
             return {tl["title"]: tl["id"] for tl in tasklists.get("items", [])}
         except Exception as e:
