@@ -73,6 +73,8 @@ For detailed steps, refer to the [Quickstart Guide](./Quickstart.md).
 - **Google API**:
     - OAuth2 client configuration
     - Access token retrieval
+- **Environment Variable**:
+    - `LAST_SUCCESSFUL_SYNC` ISO timestamp to filter pages by last edit
 
 
 ## Contributing

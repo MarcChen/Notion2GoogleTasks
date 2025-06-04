@@ -76,7 +76,9 @@ class TestNotionClient:
         sent_payload = mock_post.call_args.kwargs["json"]
         assert "filter" in sent_payload
         assert any(
-            f.get("timestamp") == "last_edited_time" for f in sent_payload["filter"]["and"]
+            f.get("timestamp") == "last_edited_time" and
+            f.get("last_edited_time", {}).get("on_or_after") == ts.isoformat()
+            for f in sent_payload["filter"]["and"]
         )
 
     @patch("requests.get")

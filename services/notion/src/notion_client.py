@@ -65,14 +65,16 @@ class NotionClient:
             if last_edited_since is not None:
                 last_edit_filter = {
                     "timestamp": "last_edited_time",
-                    "last_edited_time": {"on_or_after": last_edited_since.isoformat()},
+                    "last_edited_time": {
+                        "on_or_after": last_edited_since.isoformat()
+                    },
                 }
                 if "filter" in query_payload:
                     query_payload["filter"] = {
                         "and": [query_payload["filter"], last_edit_filter]
                     }
                 else:
-                    query_payload["filter"] = last_edit_filter
+                    query_payload["filter"] = {"and": [last_edit_filter]}
 
             response = requests.post(url, headers=self.headers, json=query_payload)
             response.raise_for_status()
