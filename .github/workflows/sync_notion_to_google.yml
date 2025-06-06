@@ -3,12 +3,12 @@ name: Sync Notion to Google Tasks
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 11,15,22 * * *'
+    - cron: '0 9,12,15,20,22 * * *'
 
 jobs:
   sync-notion:
     name: Sync Notion to Google Tasks
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     if: github.ref == 'refs/heads/main'  # Only execute on the main branch
 
