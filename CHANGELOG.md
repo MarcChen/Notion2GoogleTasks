@@ -278,3 +278,21 @@ This pull request introduces a verbose logging feature to improve debugging and 
 ### Workflow Update
 * Updated the GitHub Actions workflow (`.github/workflows/sync_notion_to_google.yml`) to disable verbose logging by default when running the script. (`[.github/workflows/sync_notion_to_google.ymlL140-R140](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9L140-R140)`)
 
+## [2.4.0] - 2025-06-07
+- Merged PR #38 by @MarcChen: Enhance sync functionality by adding last_successful_sync parameter t…
+This pull request introduces enhancements to the synchronization process between Notion and Google Tasks by adding support for filtering based on a `last_successful_sync` timestamp. It also includes improvements to error handling, code formatting, and integration tests for better maintainability and robustness.
+
+### Synchronization Enhancements:
+* Updated `sync_pages_to_google_tasks` and `sync_google_tasks_to_notion` methods to accept a `last_successful_sync` parameter for filtering Notion pages and Google Tasks by their last modification time. (`main.py`, `[[1]](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1L54-R54)`, `[[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L70-R86)`)
+* Modified `get_filtered_sorted_database` in `notion_client.py` to add a timestamp filter when `last_successful_sync` is provided, ensuring only recently modified pages are retrieved. (`services/notion/src/notion_client.py`, `[[1]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bL29-R39)`, `[[2]](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR52-R70)`)
+
+### Error Handling Improvements:
+* Added a check in `mark_page_as_completed` to handle cases where the database response is `None`, improving error visibility and debugging. (`services/notion/src/notion_client.py`, `[services/notion/src/notion_client.pyR198-R201](diffhunk://#diff-ed9f3408349d1f60a3e0d659e7fb8bd8319c7ee38aff41d2f75c71752665693bR198-R201)`)
+
+### Code Formatting and Readability:
+* Reformatted `_verbose_print` and related methods for better readability and consistency. (`services/sync_notion_google_task/main.py`, `[[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L32-R34)`, `[[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L43-R57)`)
+
+### Integration Testing Enhancements:
+* Enhanced the integration test for `get_filtered_sorted_database` to include validation of unfiltered and filtered queries, logical consistency, and proper handling of the `LAST_SUCCESSFUL_SYNC` environment variable. (`tests/integration/test_notion_client_integration.py`, `[tests/integration/test_notion_client_integration.pyL74-R188](diffhunk://#diff-98940436c4f7d0df16a188522e3abadbfeda23ad465056abb78a624cb7ddae63L74-R188)`)
+* Added helper functions for parsing timestamps and validating database responses to improve test clarity and maintainability. (`tests/integration/test_notion_client_integration.py`, `[tests/integration/test_notion_client_integration.pyL74-R188](diffhunk://#diff-98940436c4f7d0df16a188522e3abadbfeda23ad465056abb78a624cb7ddae63L74-R188)`)…o sync methods and updating database query filters accordingly
+
