@@ -25,7 +25,7 @@ class NotionToGoogleTaskSyncer:
     ):
         self.notion_client = NotionClient(notion_api_key, database_id, project_root)
         self.google_tasks_manager = GoogleTasksManager(token_path)
-        self.sms_altert = SMSAPI(sms_user, sms_password)
+        self.sms_client = SMSAPI(sms_user, sms_password)
         self.verbose = verbose
 
     def _verbose_print(self, message: str, style: str = ""):
@@ -109,7 +109,7 @@ class NotionToGoogleTaskSyncer:
                     else:
                         console.print(f"[red]Error ensuring task list: {e}[/red]")
                     progress.advance(task)
-                    self.sms_altert.send_sms(
+                    self.sms_client.send_sms(
                         f"Error ensuring task list for tag '{tag}': {e}"
                     )
                     raise e
@@ -121,7 +121,7 @@ class NotionToGoogleTaskSyncer:
                 except Exception as e:
                     console.print(f"[red]Error building task description: {e}[/red]")
                     progress.advance(task)
-                    self.sms_altert.send_sms(f"Error building task description: {e}")
+                    self.sms_client.send_sms(f"Error building task description: {e}")
                     raise e
 
                 try:
@@ -149,7 +149,7 @@ class NotionToGoogleTaskSyncer:
                         )
                     else:
                         console.print(f"[red]Error creating task: {e}[/red]")
-                    self.sms_altert.send_sms(
+                    self.sms_client.send_sms(
                         f"Error creating task for page ID '{page_id}': {e}"
                     )
                     raise e
@@ -410,7 +410,7 @@ class NotionToGoogleTaskSyncer:
                             )
                         else:
                             print(f"[red]Error creating page for task: {e}[/red]")
-                        self.sms_altert.send_sms(f"Task creation error: {str(e)[:50]}")
+                        self.sms_client.send_sms(f"Task creation error: {str(e)[:50]}")
                         continue
 
             # -----------------------------
@@ -445,7 +445,7 @@ class NotionToGoogleTaskSyncer:
                         self.notion_client.mark_page_as_completed(notion_page_id)
                     except Exception as e:
                         print(f"[red]Error updating completed task: {e}[/red]")
-                        self.sms_altert.send_sms(
+                        self.sms_client.send_sms(
                             f"Error updating completed task: {str(e)[:50]}"
                         )
                         continue
