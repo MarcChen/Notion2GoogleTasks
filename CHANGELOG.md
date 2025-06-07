@@ -259,3 +259,22 @@ This pull request introduces functionality to associate tasks with parent pages 
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L339-R393): Corrected a typo in the `sms_alert` attribute name, fixing a potential runtime error.
 * [`services/sync_notion_google_task/main.py`](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R1-L3): Adjusted import order for `datetime` to improve code readability.… from task title
 
+## [2.3.1] - 2025-06-07
+- Merged PR #37 by @MarcChen: Add support for verbose and non-verbose logging in sync process
+This pull request introduces a verbose logging feature to improve debugging and enhance user control over log outputs. It also includes minor refactoring and bug fixes. The most important changes are grouped below:
+
+### Feature: Verbose Logging
+* Added a `--verbose` and `--no-verbose` argument to `main.py` to toggle detailed logging. The default is verbose mode enabled. (`[main.pyR1-R25](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R1-R25)`)
+* Introduced a `_verbose_print` method in `services/sync_notion_google_task/main.py` to conditionally print detailed logs based on the verbose mode. (`[services/sync_notion_google_task/main.pyR25-R66](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R25-R66)`)
+* Replaced all direct `console.print` calls with `_verbose_print` in methods like `sync_pages_to_google_tasks` and `print_progress`. This ensures sensitive information is masked when verbose mode is disabled. (`[[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L65-R120)`, `[[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R321-R326)`, `[[3]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L332-R372)`, `[[4]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L355-R390)`, `[[5]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L435-R471)`)
+
+### Refactoring
+* Renamed `sms_altert` to `sms_client` for better clarity and consistency in `services/sync_notion_google_task/main.py`. (`[[1]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2R25-R66)`, `[[2]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L65-R120)`, `[[3]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L96-R150)`, `[[4]](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L393-R425)`)
+* Consolidated task title formatting into a new variable `task_title_full`, improving readability and maintainability. (`[services/sync_notion_google_task/main.pyL96-R150](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L96-R150)`)
+
+### Bug Fixes
+* Fixed a potential issue in the `build_task_description` method by renaming a variable to avoid overwriting the input `due_date`. (`[services/sync_notion_google_task/main.pyL191-R229](diffhunk://#diff-ca3291ce30ba1de4e7c6d1b01581005f2532cba798ef777740f965964fb2c3e2L191-R229)`)
+
+### Workflow Update
+* Updated the GitHub Actions workflow (`.github/workflows/sync_notion_to_google.yml`) to disable verbose logging by default when running the script. (`[.github/workflows/sync_notion_to_google.ymlL140-R140](diffhunk://#diff-4d0c7cedac148f0b4c03700fe8bc7320da1eca7be59c69a395cc88af4df828a9L140-R140)`)
+
