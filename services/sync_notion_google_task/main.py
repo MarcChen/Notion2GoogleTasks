@@ -29,9 +29,11 @@ class NotionToGoogleTaskSyncer:
         self.sms_client = SMSAPI(sms_user, sms_password)
         self.verbose = verbose
 
-    def _verbose_print(self, message: str, console: Console, style: str = "", *args, **kwargs):
+    def _verbose_print(
+        self, message: str, console: Console, style: str = "", *args, **kwargs
+    ):
         """Print message only if verbose mode is enabled.
-        
+
         Args:
             message (str): The message template with {} placeholders
             style (str): Rich markup style for colored output
@@ -40,7 +42,9 @@ class NotionToGoogleTaskSyncer:
         """
         if self.verbose:
             # When verbose is on, format the message with all provided arguments
-            formatted_message = message.format(*args, **kwargs) if (args or kwargs) else message
+            formatted_message = (
+                message.format(*args, **kwargs) if (args or kwargs) else message
+            )
             if style:
                 console.print(f"[{style}]{formatted_message}[/{style}]")
             else:
@@ -48,12 +52,12 @@ class NotionToGoogleTaskSyncer:
         else:
             # When verbose is off, replace all parameters with ***
             # Count the number of {} placeholders and replace them with ***
-            placeholder_count = message.count('{}')
+            placeholder_count = message.count("{}")
             if placeholder_count > 0:
-                sanitized_message = message.format(*(['***'] * placeholder_count))
+                sanitized_message = message.format(*(["***"] * placeholder_count))
             else:
                 sanitized_message = message
-            
+
             if style:
                 console.print(f"[{style}]{sanitized_message}[/{style}]")
             else:
@@ -67,11 +71,19 @@ class NotionToGoogleTaskSyncer:
 
     # Method to sync Notion pages to Google Tasks
 
-    def sync_pages_to_google_tasks(self):
+    def sync_pages_to_google_tasks(
+        self, last_successful_sync: Optional[datetime] = None
+    ):
         """
         Synchronizes Notion pages to Google Tasks with a progress bar that remains at the top.
+
+        Args:
+            last_successful_sync (Optional[datetime]): If provided, only sync pages
+                                                      modified since this timestamp.
         """
-        notion_pages = self.notion_client.get_filtered_sorted_database()
+        notion_pages = self.notion_client.get_filtered_sorted_database(
+            last_successful_sync=last_successful_sync
+        )
         if not notion_pages:
             print("[red]No pages retrieved from Notion.[/red]")
             return

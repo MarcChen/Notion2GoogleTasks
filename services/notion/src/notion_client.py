@@ -26,13 +26,17 @@ class NotionClient:
         }
 
     def get_filtered_sorted_database(
-        self, query_page_ids: List[int] = [-1]
+        self,
+        query_page_ids: List[int] = [-1],
+        last_successful_sync: Optional[datetime] = None,
     ) -> Optional[Dict]:
         """
         Fetches the database information from Notion with specified filters and sorting.
         Args:
             query_page_ids (List[int], optional): A list of page IDs to filter the database query.
                                                   Defaults to [-1], which loads the default query payload from a JSON file.
+            last_successful_sync (Optional[datetime], optional): If provided, adds a filter to only retrieve
+                                                                pages modified since this timestamp.
         Returns:
             Optional[Dict]: The JSON response from the Notion API if the request is successful; None otherwise.
         """
@@ -45,6 +49,25 @@ class NotionClient:
                     "r",
                 ) as file:
                     query_payload = json.load(file)
+
+                if last_successful_sync:
+                    sync_timestamp = last_successful_sync.isoformat()
+
+                    timestamp_filter = {
+                        "timestamp": "last_edited_time",
+                        "last_edited_time": {"on_or_after": sync_timestamp},
+                    }
+
+                    if "filter" in query_payload:
+                        if "and" in query_payload["filter"]:
+                            query_payload["filter"]["and"].append(timestamp_filter)
+                        else:
+                            existing_filter = query_payload["filter"]
+                            query_payload["filter"] = {
+                                "and": [existing_filter, timestamp_filter]
+                            }
+                    else:
+                        query_payload["filter"] = timestamp_filter
             else:
                 query_payload = {
                     "filter": {
@@ -170,6 +193,10 @@ class NotionClient:
             )
         except Exception as e:
             print(f"[red]Error fetching database to find task ID {task_id}: {e}[/red]")
+            return None
+
+        if database_response is None:
+            print(f"[red]Failed to fetch database response for task ID {task_id}[/red]")
             return None
 
         parsed_data = self.parse_notion_response(database_response)

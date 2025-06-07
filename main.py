@@ -51,5 +51,5 @@ if __name__ == "__main__":
         sms_password=free_mobile_api_key,
         verbose=args.verbose,
     )
-    syncer.sync_pages_to_google_tasks()
+    syncer.sync_pages_to_google_tasks(last_successful_sync=last_successful_sync)
     syncer.sync_google_tasks_to_notion(last_successful_sync=last_successful_sync)
