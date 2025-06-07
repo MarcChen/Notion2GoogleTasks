@@ -2,6 +2,7 @@ import datetime as dt
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from pytest import console_main
 from rich import print
 from rich.console import Console
 from rich.live import Live
@@ -21,10 +22,48 @@ class NotionToGoogleTaskSyncer:
         token_path: str,
         sms_user: str,
         sms_password: str,
+        verbose: bool = True,
     ):
         self.notion_client = NotionClient(notion_api_key, database_id, project_root)
         self.google_tasks_manager = GoogleTasksManager(token_path)
-        self.sms_altert = SMSAPI(sms_user, sms_password)
+        self.sms_client = SMSAPI(sms_user, sms_password)
+        self.verbose = verbose
+
+    def _verbose_print(self, message: str, console: Console, style: str = "", *args, **kwargs):
+        """Print message only if verbose mode is enabled.
+        
+        Args:
+            message (str): The message template with {} placeholders
+            style (str): Rich markup style for colored output
+            *args: Arguments to format into the message when verbose is True
+            **kwargs: Keyword arguments to format into the message when verbose is True
+        """
+        if self.verbose:
+            # When verbose is on, format the message with all provided arguments
+            formatted_message = message.format(*args, **kwargs) if (args or kwargs) else message
+            if style:
+                console.print(f"[{style}]{formatted_message}[/{style}]")
+            else:
+                console.print(formatted_message)
+        else:
+            # When verbose is off, replace all parameters with ***
+            # Count the number of {} placeholders and replace them with ***
+            placeholder_count = message.count('{}')
+            if placeholder_count > 0:
+                sanitized_message = message.format(*(['***'] * placeholder_count))
+            else:
+                sanitized_message = message
+            
+            if style:
+                console.print(f"[{style}]{sanitized_message}[/{style}]")
+            else:
+                console.print(sanitized_message)
+
+    def _safe_truncate(self, text: str, max_length: int = 20) -> str:
+        """Safely truncate text for non-verbose output."""
+        if not text:
+            return "N/A"
+        return text if len(text) <= max_length else f"{text[:max_length]}..."
 
     # Method to sync Notion pages to Google Tasks
 
@@ -62,26 +101,23 @@ class NotionToGoogleTaskSyncer:
                 page_url = page["page_url"]
                 parent_page_name = page["parent_page_name"] or None
 
-                console.print(f"[bold]Processing Page ID: {page_id}[/bold]")
+                self._verbose_print("Processing Page ID: {}", console, "bold", page_id)
+                self._verbose_print("Page Title: {}", console, "blue", page_title)
 
                 # Modify check: also skip if the Notion page has the FromTask checkbox enabled
                 if self.task_exists(google_task_lists, page_id) or page.get(
                     "FromTask", False
                 ):
-                    console.print(
-                        f"[yellow]Task for page ID '{page_id}' already exists or FromTask enabled. Skipping...[/yellow]"
-                    )
+                    self._verbose_print("Task for page ID '{}' already exists or FromTask enabled. Skipping...", console, "yellow", page_id)
                     progress.advance(task)
                     continue
 
                 try:
                     tasklist_id = self.ensure_tasklist_exists(tag, google_task_lists)
                 except Exception as e:
-                    console.print(
-                        f"[red]Error ensuring task list for tag '{tag}': {e}[/red]"
-                    )
+                    self._verbose_print("Error ensuring task list for tag '{}': {}", console, "red", tag, e)
                     progress.advance(task)
-                    self.sms_altert.send_sms(
+                    self.sms_client.send_sms(
                         f"Error ensuring task list for tag '{tag}': {e}"
                     )
                     raise e
@@ -93,24 +129,25 @@ class NotionToGoogleTaskSyncer:
                 except Exception as e:
                     console.print(f"[red]Error building task description: {e}[/red]")
                     progress.advance(task)
-                    self.sms_altert.send_sms(f"Error building task description: {e}")
+                    self.sms_client.send_sms(f"Error building task description: {e}")
                     raise e
 
                 try:
+                    task_title_full = (
+                        f"{page_title} - {parent_page_name} | ({page_id})"
+                        if parent_page_name
+                        else f"{page_title} | ({page_id})"
+                    )
                     self.google_tasks_manager.create_task(
                         tasklist_id=tasklist_id,
-                        task_title=f"{page_title} - {parent_page_name} | ({page_id})",
+                        task_title=task_title_full,
                         task_notes=task_description,
                         due_date=recomputed_due_date,
                     )
-                    console.print(
-                        f"[green]Task for page ID '{page_id}' created successfully![/green]"
-                    )
+                    self._verbose_print("Task for page ID '{}' created successfully!", console, "green", page_id)
                 except Exception as e:
-                    console.print(
-                        f"[red]Error creating task for page ID '{page_id}': {e}[/red]"
-                    )
-                    self.sms_altert.send_sms(
+                    self._verbose_print("Error creating task for page ID '{}': {}", console, "red", page_id, e)
+                    self.sms_client.send_sms(
                         f"Error creating task for page ID '{page_id}': {e}"
                     )
                     raise e
@@ -188,8 +225,8 @@ class NotionToGoogleTaskSyncer:
             for url in urls:
                 description_lines.append(f" - {url}")
         if due_date:
-            due_date = datetime.fromisoformat(due_date)
-            description_lines.append(f"Due Date: {due_date.strftime('%d-%m-%y')}")
+            due_date_obj = datetime.fromisoformat(due_date)
+            description_lines.append(f"Due Date: {due_date_obj.strftime('%d-%m-%y')}")
         return "\n".join(description_lines)
 
     def compute_due_date(self, due_date_str: Optional[str]) -> datetime:
@@ -281,11 +318,12 @@ class NotionToGoogleTaskSyncer:
             )
 
         TOTAL_STEPS = 3
+        console = Console()
         task_lists = self.google_tasks_manager.list_task_lists()
 
         for tasklist_name, tasklist_id in task_lists.items():
             # Print out the task list name
-            print(f"\n[bold]Processing Task List:[/bold] {tasklist_name}")
+            self._verbose_print("Processing Task List: {}", console, "bold", tasklist_name)
 
             # -----------------------------
             # Part 1: Sync NEW tasks
@@ -329,13 +367,9 @@ class NotionToGoogleTaskSyncer:
                                 )
                             )
                             if parent_page_id:
-                                print(
-                                    f"[green]Found parent page '{parent_page_name}' with ID: {parent_page_id}[/green]"
-                                )
+                                self._verbose_print("Found parent page '{}' with ID: {}", console, "green", parent_page_name, parent_page_id)
                             else:
-                                print(
-                                    f"[yellow]Parent page '{parent_page_name}' not found, creating task without parent[/yellow]"
-                                )
+                                self._verbose_print("Parent page '{}' not found, creating task without parent", console, "yellow", parent_page_name)
 
                         # Create new Notion page with FromTask checkbox = True
                         notion_page_id = self.notion_client.create_new_page(
@@ -352,10 +386,8 @@ class NotionToGoogleTaskSyncer:
                             new_title=updated_title,
                         )
                     except Exception as e:
-                        print(
-                            f"[red]Error creating page for task '{task_title}': {e}[/red]"
-                        )
-                        self.sms_altert.send_sms(f"Task creation error: {str(e)[:50]}")
+                        self._verbose_print("Error creating page for task '{}': {}", console, "red", task_title, e)
+                        self.sms_client.send_sms(f"Task creation error: {str(e)[:50]}")
                         continue
 
             # -----------------------------
@@ -390,7 +422,7 @@ class NotionToGoogleTaskSyncer:
                         self.notion_client.mark_page_as_completed(notion_page_id)
                     except Exception as e:
                         print(f"[red]Error updating completed task: {e}[/red]")
-                        self.sms_altert.send_sms(
+                        self.sms_client.send_sms(
                             f"Error updating completed task: {str(e)[:50]}"
                         )
                         continue
@@ -432,10 +464,8 @@ class NotionToGoogleTaskSyncer:
                                 self.google_tasks_manager.mark_task_completed(
                                     tasklist_id, google_task_id
                                 )
-                                print(
-                                    f"Marked Google Task ID '{google_task_id}' as completed"
-                                )
+                                self._verbose_print("Marked Google Task ID '{}' as completed", console, "green", google_task_id)
                 except Exception as e:
-                    print(f"[red]Error syncing statuses: {e}[/red]")
+                    console.print(f"[red]Error syncing statuses: {e}[/red]")
 
-            print("[green]Done processing all steps for this task list![/green]")
+            console.print("[green]Done processing all steps for this task list![/green]")

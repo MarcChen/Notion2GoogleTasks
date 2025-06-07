@@ -137,7 +137,7 @@ jobs:
         shell: bash
         run: |
           export TOKEN_PATH="${{ github.workspace }}/token.json"
-          poetry run python main.py
+          poetry run python main.py --no-verbose
         working-directory: ${{ github.workspace }}
         env:
           NOTION_API: ${{ secrets.NOTION_API }}
