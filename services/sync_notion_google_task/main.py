@@ -72,7 +72,8 @@ class NotionToGoogleTaskSyncer:
     # Method to sync Notion pages to Google Tasks
 
     def sync_pages_to_google_tasks(
-        self, last_successful_sync: Optional[datetime] = None
+        self, last_successful_sync: Optional[datetime] = None,
+        query_page_ids: Optional[List[int]] = None
     ):
         """
         Synchronizes Notion pages to Google Tasks with a progress bar that remains at the top.
@@ -80,8 +81,10 @@ class NotionToGoogleTaskSyncer:
         Args:
             last_successful_sync (Optional[datetime]): If provided, only sync pages
                                                       modified since this timestamp.
+            query_page_ids (Optional[List[int]]): If provided, only sync the specified page IDs.
         """
         notion_pages = self.notion_client.get_filtered_sorted_database(
+            query_page_ids=query_page_ids if query_page_ids else [-1],
             last_successful_sync=last_successful_sync
         )
         if not notion_pages:

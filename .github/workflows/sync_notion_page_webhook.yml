@@ -1,0 +1,142 @@
+name: Sync Single Notion Page to Google Tasks
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      page_id:
+        description: 'Notion Page ID to sync'
+        required: true
+        type: string
+      page_title:
+        description: 'Notion Page Title'
+        required: false
+        type: string
+
+jobs:
+  sync-single-page:
+    name: Sync Single Notion Page to Google Tasks
+    runs-on: self-hosted
+
+    if: github.ref == 'refs/heads/main'  # Only execute on the main branch
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 1) Ensure Python 3.10
+      - name: Ensure Python 3.10 in PATH (install if missing)
+        shell: bash
+        run: |
+          if command -v python3.10 &>/dev/null; then
+            echo "Python 3.10 is already installed at $(command -v python3.10)."
+          else
+            echo "Python 3.10 not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y software-properties-common
+            sudo add-apt-repository -y ppa:deadsnakes/ppa
+            sudo apt-get update
+            sudo apt-get install -y python3.10
+          fi
+
+          # Ensure Python 3.10 is available in PATH
+          if command -v python3.10 &>/dev/null; then
+            echo "$(dirname "$(command -v python3.10)")" >> $GITHUB_PATH
+          else
+            echo "ERROR: Python 3.10 installation failed."
+            exit 1
+          fi
+
+      # 2) Ensure Poetry
+      - name: Ensure Poetry in PATH (install if missing)
+        shell: bash
+        run: |
+          if command -v poetry &>/dev/null; then
+            echo "Poetry is already installed at $(command -v poetry)."
+          else
+            echo "Poetry not found. Installing..."
+            curl -sSL https://install.python-poetry.org | python3.10 -
+
+            # Add Poetry's bin directory to PATH for the current session
+            export PATH="$HOME/.local/bin:$PATH"
+          fi
+
+          # Ensure Poetry is available in PATH
+          if command -v poetry &>/dev/null; then
+            echo "$(dirname "$(command -v poetry)")" >> $GITHUB_PATH
+          else
+            echo "ERROR: Poetry not found after installation."
+            exit 1
+          fi
+
+      # 3) Validate Dependencies
+      - name: Validate Dependencies
+        shell: bash
+        run: |
+          echo "=== Checking Python 3.10 ==="
+          command -v python3.10 || { echo "Python 3.10 not found"; exit 1; }
+          python3.10 --version
+
+          echo "=== Checking Poetry ==="
+          command -v poetry || { echo "Poetry not found"; exit 1; }
+          poetry --version
+
+          echo "=== Running poetry check ==="
+          poetry check
+        working-directory: ${{ github.workspace }}
+
+      # 4) Configure Poetry environment to use Python 3.10
+      - name: Set Poetry Env to Python 3.10
+        shell: bash
+        run: |
+          poetry env use python3.10
+        working-directory: ${{ github.workspace }}
+
+      # 5) Install Dependencies
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          poetry install
+        working-directory: ${{ github.workspace }}
+
+      # 6) Generate Google API Token
+      - name: Generate Google API Token
+        shell: bash
+        run: |
+          poetry run python services/google_task/config/config_creds.py --save_dir .
+        working-directory: ${{ github.workspace }}
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      # 7) Set current timestamp as a fallback for last_successful_sync (not used for single page)
+      - name: Set current timestamp
+        shell: bash
+        run: |
+          echo "LAST_SUCCESSFUL_SYNC=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+
+      # 8) Sync Single Notion Page to Google Tasks
+      - name: Sync Single Notion Page to Google Tasks
+        shell: bash
+        run: |
+          export TOKEN_PATH="${{ github.workspace }}/token.json"
+          
+          # Convert page_id to integer (remove any whitespace)
+          PAGE_ID=$(echo "${{ github.event.inputs.page_id }}" | tr -d ' ')
+          
+          # Run with single page mode
+          poetry run python main.py --no-verbose --page-id="$PAGE_ID"
+          
+          echo "✅ Successfully processed Notion page ID: $PAGE_ID"
+        working-directory: ${{ github.workspace }}
+        env:
+          NOTION_API: ${{ secrets.NOTION_API }}
+          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          PROJECT_ROOT: ${{ github.workspace }}
+          FREE_MOBILE_USER_ID: ${{ secrets.FREE_MOBILE_USER_ID }}
+          FREE_MOBILE_API_KEY: ${{ secrets.FREE_MOBILE_API_KEY }}
+          LAST_SUCCESSFUL_SYNC: ${{ env.LAST_SUCCESSFUL_SYNC }}

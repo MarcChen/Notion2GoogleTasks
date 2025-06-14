@@ -1,0 +1,20 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Project Configuration
+project_name = "notion2googletasks"
+environment  = "prod"
+
+# GitHub Configuration
+github_repo_owner = "your-github-username"
+github_repo_name  = "Notion2GoogleTasks"
+
+# GitHub Personal Access Token (replace with your actual value)
+github_pat = "your-github-personal-access-token"
+
+# Notion Webhook Verification Token (replace with your actual value)
+# This token is provided by Notion during webhook subscription verification
+notion_verification_token = "your-notion-verification-token"
