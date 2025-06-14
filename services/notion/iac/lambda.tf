@@ -14,13 +14,14 @@ resource "aws_cloudwatch_log_group" "webhook_lambda_logs" {
 
 # Lambda function
 resource "aws_lambda_function" "webhook_handler" {
-  filename      = "webhook_handler.zip"
-  function_name = "${var.project_name}-webhook-handler-${var.environment}"
-  role          = "arn:aws:iam::649938092864:role/Notion2GoogleTasks-webhook-lambda-role-prod"
-  handler       = "webhook_handler.lambda_handler"
-  runtime       = "python3.11"
-  timeout       = 300
-  memory_size   = 256
+  filename         = "webhook_handler.zip"
+  source_code_hash = filebase64sha256("webhook_handler.zip")
+  function_name    = "${var.project_name}-webhook-handler-${var.environment}"
+  role             = "arn:aws:iam::649938092864:role/Notion2GoogleTasks-webhook-lambda-role-prod"
+  handler          = "webhook_handler.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = 300
+  memory_size      = 256
 
   environment {
     variables = {
@@ -28,6 +29,10 @@ resource "aws_lambda_function" "webhook_handler" {
       GITHUB_REPO_NAME                    = var.github_repo_name
       GITHUB_PAT_PARAMETER_NAME           = aws_ssm_parameter.github_pat.name
       NOTION_VERIFICATION_TOKEN_PARAMETER = aws_ssm_parameter.notion_verification_token.name
+      PROJECT_NAME                        = var.project_name
+      ENVIRONMENT                         = var.environment
+      GITHUB_WORKFLOW_FILE                = var.github_workflow_file
+      GITHUB_TARGET_BRANCH                = var.github_target_branch
     }
   }
 

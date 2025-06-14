@@ -40,3 +40,16 @@ variable "notion_verification_token" {
   type        = string
   sensitive   = true
 }
+
+# New variables needed for webhook_handler.py
+variable "github_workflow_file" {
+  description = "GitHub workflow file name to trigger"
+  type        = string
+  default     = "sync_notion_page_webhook.yml"
+}
+
+variable "github_target_branch" {
+  description = "GitHub target branch for workflow dispatch"
+  type        = string
+  default     = "main"
+}
