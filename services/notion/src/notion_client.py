@@ -91,6 +91,27 @@ class NotionClient:
         except FileNotFoundError as e:
             print(f"[red]Error loading query payload: {e}[/red]")
             return None
+        
+    def get_page_by_id(self, page_id: str) -> Optional[Dict]:
+        """
+        Fetches a single page from Notion by its ID.
+
+        Args:
+            page_id (str): The unique ID of the page to fetch (without hyphens).
+
+        Returns:
+            Optional[Dict]: The JSON response from the Notion API if successful; None otherwise.
+        """
+        url = f"https://api.notion.com/v1/pages/{page_id.replace('-', '')}"
+
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            print(f"[red]Error fetching page {page_id}: {e}[/red]")
+            return None
 
     def fetch_parent_page_names(
         self, parent_page_ids: Set[str]

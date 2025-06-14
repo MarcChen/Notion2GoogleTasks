@@ -30,7 +30,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--page-id",
-        type=int,
+        type=str,
         help="ID of the Notion page to sync. When provided, automatically sets mode to 'single'.",
     )
     parser.add_argument(
@@ -91,9 +91,8 @@ if __name__ == "__main__":
         # Process a single page
         print(f"Processing single Notion page (ID: {args.page_id})")
         # Use a list with the specific page ID
-        query_page_ids = [args.page_id]
         syncer.sync_pages_to_google_tasks(
-            query_page_ids=query_page_ids,
+            single_page_id=args.page_id,
         )
     else:
         # Full synchronization
