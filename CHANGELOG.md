@@ -296,3 +296,22 @@ This pull request introduces enhancements to the synchronization process between
 * Enhanced the integration test for `get_filtered_sorted_database` to include validation of unfiltered and filtered queries, logical consistency, and proper handling of the `LAST_SUCCESSFUL_SYNC` environment variable. (`tests/integration/test_notion_client_integration.py`, `[tests/integration/test_notion_client_integration.pyL74-R188](diffhunk://#diff-98940436c4f7d0df16a188522e3abadbfeda23ad465056abb78a624cb7ddae63L74-R188)`)
 * Added helper functions for parsing timestamps and validating database responses to improve test clarity and maintainability. (`tests/integration/test_notion_client_integration.py`, `[tests/integration/test_notion_client_integration.pyL74-R188](diffhunk://#diff-98940436c4f7d0df16a188522e3abadbfeda23ad465056abb78a624cb7ddae63L74-R188)`)…o sync methods and updating database query filters accordingly
 
+## [2.5.0] - 2025-06-14
+- Merged PR #39 by @MarcChen: Feat/adding notion webhook trigger
+This pull request introduces significant enhancements to the project, focusing on three main areas: adding a Python code style guide, implementing a new GitHub Actions workflow for syncing Notion pages to Google Tasks, and setting up infrastructure for a Notion webhook using AWS services. Below is a summary of the most important changes:
+
+### Python Code Style and Workflow Enhancements:
+* **Python Code Style Guide**: Added a new `python.instructions.md` file specifying the use of `black`, `isort`, and `flake8` for formatting and linting, with a maximum line length of 88 characters.
+* **GitHub Actions Workflow**: Introduced a new workflow, `sync_notion_page_webhook.yml`, to sync a single Notion page to Google Tasks. The workflow includes steps for setting up Python 3.10, installing Poetry, validating dependencies, and running the sync script.
+
+### Application Logic Updates:
+* **Command-line Arguments in `main.py`**: Added new arguments to support single-page sync mode (`--mode`, `--page-id`, `--page-title`) and an option to skip syncing Google Tasks to Notion (`--skip-google-to-notion`). The script now validates arguments and auto-sets the mode based on the presence of `--page-id`. [[1]](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R25-R56) [[2]](diffhunk://#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1R89-R103)
+* **Single Page Sync Logic**: Updated the application to handle single-page syncs by querying specific page IDs and skipping unnecessary steps like `last_successful_sync` validation.
+
+### Infrastructure for Notion Webhook:
+* **Terraform Configuration**: Added Terraform files to provision AWS resources for a Notion webhook, including a Lambda function, CloudWatch logs, IAM roles, and SSM parameters for secure storage of sensitive values. [[1]](diffhunk://#diff-29955c34e6eb7e840d00c6a7685f180df57acca4b9a2dba80b90157cb6ac9dd6R1-R14) [[2]](diffhunk://#diff-6f25af28e4a6098de0bcc875aa27bfbfaaa81613ae2301668da8a4edc26bf393R1-R29) [[3]](diffhunk://#diff-a68f12cb8292abb68b21fbd9ea1025e3d7a6bf88b4eb3ebeaeb913ffa77d215fR1-R63) [[4]](diffhunk://#diff-74ad0346856f0d9f0d1bb67a5d15e7a2f8adc3bf28a7838886df20be4ecc4144R1-R16)
+* **Deployment Scripts**: Added a `build.sh` script to package the Lambda function, ensuring dependencies and code are bundled correctly.
+* **Documentation**: Added a detailed `README.md` explaining the setup and deployment process for the Notion webhook infrastructure, including how to obtain and configure the Notion verification token.
+
+These changes collectively enhance the project's functionality, maintainability, and infrastructure readiness for integrating Notion with Google Tasks.
+
