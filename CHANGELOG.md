@@ -315,3 +315,7 @@ This pull request introduces significant enhancements to the project, focusing o
 
 These changes collectively enhance the project's functionality, maintainability, and infrastructure readiness for integrating Notion with Google Tasks.
 
+## [2.5.1] - 2025-06-14
+- Merged PR #40 by @MarcChen: fix : Enhance sync functionality for single Notion page ID
+Update the synchronization process to support fetching a single Notion page by its ID, improving the efficiency of page retrieval and synchronization.
+
