@@ -1,5 +1,8 @@
 name: Sync Single Notion Page to Google Tasks
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
